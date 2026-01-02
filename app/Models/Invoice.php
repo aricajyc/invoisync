@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Models;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
@@ -10,6 +11,7 @@ class Invoice extends Model
 
     protected $fillable = [
         'user_id',
+        'bulk_upload_batch_id',
         'invoice_number',
         'invoice_type',
         'invoice_date_time',
@@ -122,6 +124,11 @@ class Invoice extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function bulkUploadBatch()
+    {
+        return $this->belongsTo(BulkUploadBatch::class);
     }
 
     public function lineItems()

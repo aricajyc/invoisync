@@ -7,11 +7,32 @@
         "dev": "vite"
     },
     "devDependencies": {
-        "@tailwindcss/vite": "^4.0.0",
+        "@headlessui/react": "^2.0.0",
+        "@inertiajs/react": "^2.0.0",
+        "@tailwindcss/forms": "^0.5.3",
+        "@vitejs/plugin-react": "^4.2.0",
+        "autoprefixer": "^10.4.12",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^2.0.0",
-        "tailwindcss": "^4.0.0",
+        "postcss": "^8.4.31",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "tailwindcss": "^3.2.1",
         "vite": "^7.0.7"
+    },
+    "dependencies": {
+        "@headlessui/react": "^2.2.9",
+        "@hookform/resolvers": "^5.2.2",
+        "@tanstack/react-query": "^5.90.16",
+        "@types/node": "^25.0.3",
+        "@types/react-router-dom": "^5.3.3",
+        "date-fns": "^4.1.0",
+        "file-saver": "^2.0.5",
+        "heroicons": "^2.2.0",
+        "react-hook-form": "^7.69.0",
+        "recharts": "^3.6.0",
+        "xlsx": "^0.18.5",
+        "yup": "^1.7.1"
     }
 }
