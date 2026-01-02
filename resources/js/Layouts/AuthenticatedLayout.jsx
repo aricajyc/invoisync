@@ -2,14 +2,27 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link, usePage, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+
+    const { url } = usePage();
+
+    // Redirect logic if profile is missing
+    // Better Approach: Use useEffect
+    // We need to import useEffect if not already imported (it is).
+    // And import router.
+
+    useEffect(() => {
+        if (!user.business_profile && !window.location.pathname.startsWith('/business-profile')) {
+            router.visit(route('business-profile.show'));
+        }
+    }, [user]);
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">

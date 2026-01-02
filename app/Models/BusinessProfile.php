@@ -14,11 +14,16 @@ class BusinessProfile extends Model
         'business_name',
         'business_registration_number',
         'tax_identification_number',
-        'business_type',
-        'business_address',
+        'sst_registration_number',
+        'tourism_tax_registration_number',
+        'msic_code',
+        'business_activity_description',
+        'address_line_0',
+        'address_line_1',
+        'address_line_2',
+        'postal_zone',
         'city',
         'state',
-        'postal_code',
         'country',
         'contact_email',
         'contact_phone',
@@ -36,9 +41,11 @@ class BusinessProfile extends Model
     public function getFormattedAddressAttribute(): string
     {
         return sprintf(
-            "%s, %s %s, %s",
-            $this->business_address,
-            $this->postal_code,
+            "%s, %s, %s, %s %s, %s",
+            $this->address_line_0,
+            $this->address_line_1,
+            $this->address_line_2,
+            $this->postal_zone,
             $this->city,
             $this->state
         );

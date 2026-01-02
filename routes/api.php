@@ -35,10 +35,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
     
     // Business Profile
+    // Business Profile
     Route::prefix('business-profile')->group(function () {
         Route::get('/', [BusinessProfileController::class, 'show']);
         Route::post('/', [BusinessProfileController::class, 'createOrUpdate']);
         Route::delete('/', [BusinessProfileController::class, 'destroy']);
+    });
+
+    // Reference Data
+    Route::prefix('reference')->group(function () {
+        Route::get('/countries', [App\Http\Controllers\Api\ReferenceDataController::class, 'getCountries']);
+        Route::get('/states', [App\Http\Controllers\Api\ReferenceDataController::class, 'getStates']);
+        Route::get('/msic-codes', [App\Http\Controllers\Api\ReferenceDataController::class, 'getMsicCodes']);
     });
     
     // Invoices

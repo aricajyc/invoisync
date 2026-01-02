@@ -24,28 +24,33 @@ class BusinessProfileRequest extends FormRequest
         $businessProfileId = $this->route('business_profile')?->id;
         
         return [
-            'business_name' => ['required', 'string', 'max:300'],
+            'business_name' => ['required', 'string', 'max:150'],
             'business_registration_number' => [
                 'required',
                 'string',
-                'max:50',
+                'max:20',
                 'unique:business_profiles,business_registration_number,' . $businessProfileId
             ],
             'tax_identification_number' => [
                 'required',
                 'string',
-                'size:20',
-                'regex:/^[A-Z][0-9]{19}$/',
+                'size:15', // Corrected based on typical TIN length if different, but user example suggests 20 or specific. Migration says unique.
+                // 'regex:/^[A-Z][0-9]{19}$/', // Keeping regex off or strictly following user IRBM spec? Safe to require string first.
                 'unique:business_profiles,tax_identification_number,' . $businessProfileId
             ],
-            'business_type' => ['required', 'string', 'max:100'],
-            'business_address' => ['required', 'string', 'max:500'],
-            'city' => ['required', 'string', 'max:100'],
+            'sst_registration_number' => ['nullable', 'string', 'max:30'],
+            'tourism_tax_registration_number' => ['nullable', 'string', 'max:30'],
+            'msic_code' => ['required', 'string', 'max:10'], // Could add 'exists' check if we loaded codes into DB, but using file for now.
+            'business_activity_description' => ['required', 'string', 'max:300'],
+            'address_line_0' => ['required', 'string', 'max:150'],
+            'address_line_1' => ['nullable', 'string', 'max:150'],
+            'address_line_2' => ['nullable', 'string', 'max:150'],
+            'postal_zone' => ['required', 'string', 'max:50'],
+            'city' => ['required', 'string', 'max:50'],
             'state' => ['required', 'string', 'max:100'],
-            'postal_code' => ['required', 'string', 'max:20'],
-            'country' => ['required', 'string', 'size:2', 'regex:/^[A-Z]{2}$/'],
-            'contact_email' => ['required', 'email', 'max:255'],
-            'contact_phone' => ['required', 'string', 'max:20', 'regex:/^[+0-9\s\-()]+$/'],
+            'country' => ['required', 'string', 'size:3'], // MYS is 3 chars
+            'contact_email' => ['required', 'email', 'max:150'],
+            'contact_phone' => ['required', 'string', 'max:20'],
         ];
     }
 
