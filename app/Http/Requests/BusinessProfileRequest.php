@@ -21,7 +21,7 @@ class BusinessProfileRequest extends FormRequest
      */
     public function rules(): array
     {
-        $businessProfileId = $this->route('business_profile')?->id;
+        $businessProfileId = $this->user()->businessProfile?->id;
         
         return [
             'business_name' => ['required', 'string', 'max:150'],
@@ -34,7 +34,7 @@ class BusinessProfileRequest extends FormRequest
             'tax_identification_number' => [
                 'required',
                 'string',
-                'size:15', // Corrected based on typical TIN length if different, but user example suggests 20 or specific. Migration says unique.
+                'max:20', // Changed from size:15 to max:20 to allow 14 chars as requested and other formats
                 // 'regex:/^[A-Z][0-9]{19}$/', // Keeping regex off or strictly following user IRBM spec? Safe to require string first.
                 'unique:business_profiles,tax_identification_number,' . $businessProfileId
             ],

@@ -33,10 +33,10 @@ class BusinessProfileController extends Controller
 
         if ($user->businessProfile) {
             $user->businessProfile->update($validated);
+            return Redirect::back();
         } else {
             $user->businessProfile()->create($validated);
+            return Redirect::route('dashboard')->with('status', 'Business profile saved successfully.');
         }
-
-        return Redirect::route('dashboard')->with('status', 'Business profile saved successfully.');
     }
 }
