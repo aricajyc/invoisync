@@ -20,7 +20,7 @@ Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'inde
     ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::resource('invoices', App\Http\Controllers\InvoiceController::class)->only(['index', 'create']);
+    Route::resource('invoices', App\Http\Controllers\InvoiceController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/countries', [App\Http\Controllers\Api\ReferenceDataController::class, 'getCountries'])->name('ref.countries');
         Route::get('/states', [App\Http\Controllers\Api\ReferenceDataController::class, 'getStates'])->name('ref.states');
         Route::get('/msic-codes', [App\Http\Controllers\Api\ReferenceDataController::class, 'getMsicCodes'])->name('ref.msic-codes');
+        Route::get('/unit-types', [App\Http\Controllers\Api\ReferenceDataController::class, 'getUnitTypes'])->name('ref.unit-types');
     });
 });
 

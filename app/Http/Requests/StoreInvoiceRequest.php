@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreInvoiceRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class StoreInvoiceRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +25,7 @@ class StoreInvoiceRequest extends FormRequest
         return [
             // ==================== INVOICE IDENTIFICATION ====================
             'invoice_type' => ['required', 'in:01,02,03,04'],
-            'invoice_date_time' => ['required', 'date_format:Y-m-d H:i:s'],
+            'invoice_date_time' => ['required', 'date_format:Y-m-d H:i:s,Y-m-d\TH:i:s,Y-m-d\TH:i'],
             'original_einvoice_reference' => ['nullable', 'string', 'max:255', 
                 Rule::requiredIf(fn() => in_array($this->invoice_type, ['02', '03', '04']))
             ],
@@ -34,7 +35,7 @@ class StoreInvoiceRequest extends FormRequest
             
             // ==================== SUPPLIER DETAILS (MANDATORY) ====================
             'supplier_name' => ['required', 'string', 'max:300'],
-            'supplier_tin' => ['required', 'string', 'size:20', 'regex:/^[A-Z][0-9]{19}$/'],
+            'supplier_tin' => ['required', 'string', 'max:20', 'regex:/^[A-Z][0-9]{1,19}$/'],
             'supplier_registration_number' => ['required', 'string', 'max:50'],
             'supplier_sst_registration_number' => ['nullable', 'string', 'max:20'],
             'supplier_tourism_tax_number' => ['nullable', 'string', 'max:20'],
@@ -47,12 +48,12 @@ class StoreInvoiceRequest extends FormRequest
             'supplier_postal_code' => ['nullable', 'string', 'max:20'],
             'supplier_city' => ['nullable', 'string', 'max:100'],
             'supplier_state' => ['required', 'string', 'max:100'],
-            'supplier_country' => ['required', 'string', 'size:2', 'regex:/^[A-Z]{2}$/'],
+            'supplier_country' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             'supplier_contact_number' => ['required', 'string', 'max:20', 'regex:/^[+0-9\s\-()]+$/'],
             
             // ==================== BUYER DETAILS (MANDATORY) ====================
             'buyer_name' => ['required', 'string', 'max:300'],
-            'buyer_tin' => ['required', 'string', 'size:20'],
+            'buyer_tin' => ['required', 'string', 'max:20'],
             'buyer_registration_number' => ['nullable', 'string', 'max:50'],
             'buyer_sst_registration_number' => ['nullable', 'string', 'max:20'],
             'buyer_email' => ['nullable', 'email', 'max:255'],
@@ -62,7 +63,7 @@ class StoreInvoiceRequest extends FormRequest
             'buyer_postal_code' => ['nullable', 'string', 'max:20'],
             'buyer_city' => ['nullable', 'string', 'max:100'],
             'buyer_state' => ['required', 'string', 'max:100'],
-            'buyer_country' => ['required', 'string', 'size:2', 'regex:/^[A-Z]{2}$/'],
+            'buyer_country' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             'buyer_contact_number' => ['nullable', 'string', 'max:20', 'regex:/^[+0-9\s\-()]+$/'],
             
             // ==================== PAYMENT INFORMATION (OPTIONAL) ====================
@@ -75,7 +76,7 @@ class StoreInvoiceRequest extends FormRequest
             
             // ==================== SHIPPING INFORMATION (ANNEXURE) ====================
             'shipping_recipient_name' => ['nullable', 'string', 'max:300'],
-            'shipping_recipient_tin' => ['nullable', 'string', 'size:20'],
+            'shipping_recipient_tin' => ['nullable', 'string', 'max:20'],
             'shipping_recipient_registration' => ['nullable', 'string', 'max:50'],
             'shipping_address_line1' => ['nullable', 'string', 'max:255'],
             'shipping_address_line2' => ['nullable', 'string', 'max:255'],
@@ -83,7 +84,7 @@ class StoreInvoiceRequest extends FormRequest
             'shipping_postal_code' => ['nullable', 'string', 'max:20'],
             'shipping_city' => ['nullable', 'string', 'max:100'],
             'shipping_state' => ['nullable', 'string', 'max:100'],
-            'shipping_country' => ['nullable', 'string', 'size:2', 'regex:/^[A-Z]{2}$/'],
+            'shipping_country' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             
             // ==================== OTHER REFERENCES ====================
             'bill_reference_number' => ['nullable', 'string', 'max:100'],
@@ -117,7 +118,7 @@ class StoreInvoiceRequest extends FormRequest
             'line_items.*.tax_exemption_reason' => ['nullable', 'in:01,02,03,04,05,06,07'],
             'line_items.*.tax_exempted_amount' => ['nullable', 'numeric', 'min:0'],
             'line_items.*.charge_fee_amount' => ['nullable', 'numeric', 'min:0'],
-            'line_items.*.country_of_origin' => ['nullable', 'string', 'size:2', 'regex:/^[A-Z]{2}$/'],
+            'line_items.*.country_of_origin' => ['nullable', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
             'line_items.*.product_tariff_code' => ['nullable', 'string', 'max:20'],
         ];
     }
@@ -128,7 +129,7 @@ class StoreInvoiceRequest extends FormRequest
             'supplier_tin.regex' => 'Supplier TIN must start with a letter followed by 19 digits (e.g., C1234567890123456789)',
             'supplier_msic_code.size' => 'Supplier MSIC code must be exactly 5 digits',
             'supplier_msic_code.regex' => 'Supplier MSIC code must contain only numbers',
-            'supplier_country.size' => 'Country code must be ISO 3166-1 alpha-2 format (e.g., MY)',
+            'supplier_country.size' => 'Country code must be ISO 3166-1 alpha-3 format (e.g., MYS)',
             'buyer_tin.size' => 'Buyer TIN must be exactly 20 characters (use EI00000000010 if not available)',
             'currency_code.regex' => 'Currency code must be ISO 4217 format (e.g., MYR, USD)',
             'line_items.required' => 'At least one line item is required',

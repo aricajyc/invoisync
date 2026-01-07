@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone_number', 20);
-            $table->enum('user_type', ['B2B', 'B2C'])->default('B2C');
+            $table->enum('user_type', ['B2B', 'B2C'])->default('B2B');
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->timestamp('last_login')->nullable();
             $table->rememberToken();

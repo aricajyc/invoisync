@@ -51,4 +51,44 @@ class InvoiceController extends Controller
             return back()->withErrors(['error' => 'Failed to create invoice: ' . $e->getMessage()]);
         }
     }
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Request $request, Invoice $invoice): Response
+    {
+        // Ensure user owns the invoice
+        if ($invoice->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $invoice->load(['lineItems']);
+
+        return Inertia::render('Invoices/Create', [
+            'businessProfile' => $request->user()->businessProfile,
+            'invoice' => $invoice,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(\App\Http\Requests\StoreInvoiceRequest $request, Invoice $invoice, \App\Services\InvoiceService $invoiceService)
+    {
+        // Ensure user owns the invoice
+        if ($invoice->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        try {
+            $invoiceService->updateInvoice(
+                $invoice,
+                $request->validated()
+            );
+
+            return redirect()->route('invoices.index')
+                ->with('status', 'Invoice updated successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to update invoice: ' . $e->getMessage()]);
+        }
+    }
 }

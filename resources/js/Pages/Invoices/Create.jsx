@@ -1,124 +1,196 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import InputError from '@/Components/InputError';
 import { useEffect, useState } from 'react';
 import SimpleCombobox from '@/Components/SimpleCombobox';
+import AsyncSimpleCombobox from '@/Components/AsyncSimpleCombobox';
 import axios from 'axios';
 
-export default function Create({ businessProfile }) {
-    const { data, setData, post, processing, errors } = useForm({
+export default function Create({ businessProfile, invoice }) {
+    const isEditMode = !!invoice;
+
+    const { data, setData, post, put, processing, errors, transform } = useForm({
         // Invoice Identification
-        invoice_type: '01',
-        invoice_date_time: new Date().toISOString().slice(0, 16),
-        original_einvoice_reference: '',
-        frequency_of_billing: '',
-        billing_period_start_date: '',
-        billing_period_end_date: '',
+        invoice_type: invoice?.invoice_type || '01',
+        invoice_date_time: invoice?.invoice_date_time
+            ? new Date(invoice.invoice_date_time).toISOString().slice(0, 16)
+            : new Date().toISOString().slice(0, 16),
+        frequency_of_billing: invoice?.frequency_of_billing || '',
+        billing_period_start_date: invoice?.billing_period_start_date || '',
+        billing_period_end_date: invoice?.billing_period_end_date || '',
 
         // Supplier Details
-        supplier_name: '',
-        supplier_tin: '',
-        supplier_registration_number: '',
-        supplier_sst_registration_number: '',
-        supplier_tourism_tax_number: '',
-        supplier_email: '',
-        supplier_msic_code: '',
-        supplier_business_activity_description: '',
-        supplier_address_line1: '',
-        supplier_address_line2: '',
-        supplier_address_line3: '',
-        supplier_postal_code: '',
-        supplier_city: '',
-        supplier_state: '',
-        supplier_country: 'MY',
-        supplier_contact_number: '',
+        supplier_name: invoice?.supplier_name || '',
+        supplier_tin: invoice?.supplier_tin || '',
+        supplier_registration_number: invoice?.supplier_registration_number || '',
+        supplier_sst_registration_number: invoice?.supplier_sst_registration_number || '',
+        supplier_tourism_tax_number: invoice?.supplier_tourism_tax_number || '',
+        supplier_email: invoice?.supplier_email || '',
+        supplier_msic_code: invoice?.supplier_msic_code || '',
+        supplier_business_activity_description: invoice?.supplier_business_activity_description || '',
+        supplier_contact_number: invoice?.supplier_contact_number || '',
+        // Supplier Address
+        supplier_address_line1: invoice?.supplier_address_line1 || '',
+        supplier_address_line2: invoice?.supplier_address_line2 || '',
+        supplier_address_line3: invoice?.supplier_address_line3 || '',
+        supplier_postal_code: invoice?.supplier_postal_code || '',
+        supplier_city: invoice?.supplier_city || '',
+        supplier_state: invoice?.supplier_state || '',
+        supplier_country: invoice?.supplier_country || 'MYS',
 
         // Buyer Details
-        buyer_name: '',
-        buyer_tin: '',
-        buyer_registration_number: '',
-        buyer_sst_registration_number: '',
-        buyer_email: '',
-        buyer_address_line1: '',
-        buyer_address_line2: '',
-        buyer_address_line3: '',
-        buyer_postal_code: '',
-        buyer_city: '',
-        buyer_state: '',
-        buyer_country: 'MY',
-        buyer_contact_number: '',
+        buyer_name: invoice?.buyer_name || '',
+        buyer_tin: invoice?.buyer_tin || '',
+        buyer_registration_number: invoice?.buyer_registration_number || '',
+        buyer_sst_registration_number: invoice?.buyer_sst_registration_number || '',
+        buyer_email: invoice?.buyer_email || '',
+        buyer_contact_number: invoice?.buyer_contact_number || '',
+        // Buyer Address
+        buyer_address_line1: invoice?.buyer_address_line1 || '',
+        buyer_address_line2: invoice?.buyer_address_line2 || '',
+        buyer_address_line3: invoice?.buyer_address_line3 || '',
+        buyer_postal_code: invoice?.buyer_postal_code || '',
+        buyer_city: invoice?.buyer_city || '',
+        buyer_state: invoice?.buyer_state || '',
+        buyer_country: invoice?.buyer_country || 'MYS',
+
+        // Invoice Details & References
+        currency_code: invoice?.currency_code || 'MYR',
+        currency_exchange_rate: invoice?.currency_exchange_rate || '',
+        original_einvoice_reference: invoice?.original_einvoice_reference || '',
+        bill_reference_number: invoice?.bill_reference_number || '',
+        customs_form_reference: invoice?.customs_form_reference || '',
+        incoterms: invoice?.incoterms || '',
+        free_trade_agreement_info: invoice?.free_trade_agreement_info || '',
+        authorisation_number_for_certified_exporter: invoice?.authorisation_number_for_certified_exporter || '',
+
+        // Shipping (Annexure)
+        shipping_recipient_name: invoice?.shipping_recipient_name || '',
+        shipping_recipient_tin: invoice?.shipping_recipient_tin || '',
+        shipping_recipient_registration: invoice?.shipping_recipient_registration || '',
+        shipping_address_line1: invoice?.shipping_address_line1 || '',
+        shipping_address_line2: invoice?.shipping_address_line2 || '',
+        shipping_address_line3: invoice?.shipping_address_line3 || '',
+        shipping_postal_code: invoice?.shipping_postal_code || '',
+        shipping_city: invoice?.shipping_city || '',
+        shipping_state: invoice?.shipping_state || '',
+        shipping_country: invoice?.shipping_country || 'MYS',
 
         // Payment Info
-        payment_mode: '',
-        payment_terms: '',
-        payment_amount: '',
-        payment_date: '',
-        payment_reference_number: '',
-        bank_account_number: '',
+        payment_mode: invoice?.payment_mode || '',
+        payment_terms: invoice?.payment_terms || '',
+        payment_amount: invoice?.payment_amount || '',
+        payment_date: invoice?.payment_date || '',
+        payment_reference_number: invoice?.payment_reference_number || '',
+        bank_account_number: invoice?.bank_account_number || '',
 
-        // Shipping (Annexure) - Simplified for now
-
-        // Other Refs
-        bill_reference_number: '',
-
-        // Customs
-        customs_form_reference: '',
-        incoterms: '',
-
-        // Totals & Currency
-        currency_code: 'MYR',
-        currency_exchange_rate: '',
-        total_excluding_tax: 0,
-        total_tax_amount: 0,
-        total_including_tax: 0,
-        total_payable_amount: 0,
-        total_discount_value: 0,
-        total_fee_charge_amount: 0,
+        // Totals
+        total_excluding_tax: invoice?.total_excluding_tax ? parseFloat(invoice.total_excluding_tax) : 0,
+        total_tax_amount: invoice?.total_tax_amount ? parseFloat(invoice.total_tax_amount) : 0,
+        total_including_tax: invoice?.total_including_tax ? parseFloat(invoice.total_including_tax) : 0,
+        total_payable_amount: invoice?.total_payable_amount ? parseFloat(invoice.total_payable_amount) : 0,
+        total_discount_value: invoice?.total_discount_value ? parseFloat(invoice.total_discount_value) : 0,
+        total_fee_charge_amount: invoice?.total_fee_charge_amount ? parseFloat(invoice.total_fee_charge_amount) : 0,
 
         // Line Items
-        line_items: [
-            {
-                classification_code: '022', // Default: 022 (Goods/Services)
-                product_service_description: '',
-                quantity: 1,
-                unit_of_measure: '',
-                unit_price: 0,
-                discount_rate: 0,
-                discount_amount: 0,
-                tax_type: '06', // Default: 06 (Not Applicable/Others)
-                tax_rate: 0,
-                tax_amount: 0,
-                subtotal: 0,
-                total_excluding_tax_per_line: 0,
-                tax_exempted_amount: 0,
-                tax_exemption_reason: ''
-            }
-        ]
+        line_items: invoice?.line_items?.map(item => ({
+            ...item,
+            quantity: parseFloat(item.quantity),
+            unit_price: parseFloat(item.unit_price),
+            discount_rate: parseFloat(item.discount_rate),
+            discount_amount: parseFloat(item.discount_amount),
+            tax_rate: parseFloat(item.tax_rate),
+            tax_amount: parseFloat(item.tax_amount),
+            subtotal: parseFloat(item.subtotal),
+            total_excluding_tax_per_line: parseFloat(item.total_excluding_tax_per_line),
+            tax_exempted_amount: parseFloat(item.tax_exempted_amount),
+        })) || [
+                {
+                    classification_code: '022',
+                    product_service_description: '',
+                    quantity: 1,
+                    unit_of_measure: '',
+                    unit_price: 0,
+                    discount_rate: 0,
+                    discount_amount: 0,
+                    tax_type: '06',
+                    tax_rate: 0,
+                    tax_amount: 0,
+                    subtotal: 0,
+                    total_excluding_tax_per_line: 0,
+                    tax_exempted_amount: 0,
+                    tax_exemption_reason: ''
+                }
+            ]
+    });
+
+    // Add transform logic to ensure data consistency before submission
+    transform((data) => {
+        // Recalculate totals one last time to be absolutely sure
+        const updatedItems = data.line_items.map(item => {
+            const qty = parseFloat(item.quantity) || 0;
+            const price = parseFloat(item.unit_price) || 0;
+            const discountRate = parseFloat(item.discount_rate) || 0;
+            const discountAmt = parseFloat(item.discount_amount) || 0;
+            const taxRate = parseFloat(item.tax_rate) || 0;
+
+            let subtotal = qty * price;
+            let discount = discountAmt;
+            if (discountRate > 0) discount = subtotal * (discountRate / 100);
+
+            let taxableAmount = subtotal - discount;
+            let rawTaxAmount = taxableAmount * (taxRate / 100);
+            let taxAmount = Math.round((rawTaxAmount + Number.EPSILON) * 100) / 100;
+
+            return {
+                ...item,
+                subtotal: subtotal,
+                discount_amount: discount,
+                total_excluding_tax_per_line: taxableAmount,
+                tax_amount: taxAmount
+            };
+        });
+
+        const totalExcl = updatedItems.reduce((sum, item) => sum + (parseFloat(item.total_excluding_tax_per_line) || 0), 0);
+        const totalTax = updatedItems.reduce((sum, item) => sum + (parseFloat(item.tax_amount) || 0), 0);
+        const totalIncl = totalExcl + totalTax;
+        const totalPayable = totalIncl - (parseFloat(data.total_discount_value) || 0) + (parseFloat(data.total_fee_charge_amount) || 0);
+
+        return {
+            ...data,
+            line_items: updatedItems,
+            total_excluding_tax: totalExcl,
+            total_tax_amount: totalTax,
+            total_including_tax: totalIncl,
+            total_payable_amount: totalPayable
+        };
     });
 
     const [countries, setCountries] = useState([]);
     const [states, setStates] = useState([]);
     const [msicCodes, setMsicCodes] = useState([]);
+    // Removed unitTypes state as it is now async
+    const [activeSection, setActiveSection] = useState('parties');
 
     // Fetch reference data
     useEffect(() => {
         axios.get(route('ref.countries')).then(res => setCountries(res.data));
         axios.get(route('ref.states')).then(res => setStates(res.data));
         axios.get(route('ref.msic-codes')).then(res => setMsicCodes(res.data));
+        // Removed unit-types bulk fetch
     }, []);
 
     // Prefill Logic
     useEffect(() => {
-        if (!businessProfile) return;
+        if (!businessProfile || isEditMode) return;
 
         const isStandard = ['01', '02', '03', '04'].includes(data.invoice_type);
         const isSelfBilled = ['11', '12', '13', '14'].includes(data.invoice_type);
 
         if (isStandard) {
-            // Prefill Supplier
             setData(d => ({
                 ...d,
                 supplier_name: businessProfile.business_name || '',
@@ -126,37 +198,34 @@ export default function Create({ businessProfile }) {
                 supplier_registration_number: businessProfile.business_registration_number || '',
                 supplier_sst_registration_number: businessProfile.sst_registration_number || '',
                 supplier_tourism_tax_number: businessProfile.tourism_tax_registration_number || '',
-                supplier_email: businessProfile.business_email || '',
+                supplier_email: businessProfile.contact_email || '',
                 supplier_msic_code: businessProfile.msic_code || '',
                 supplier_business_activity_description: businessProfile.business_activity_description || '',
-                supplier_address_line1: businessProfile.line1 || '',
-                supplier_address_line2: businessProfile.line2 || '',
-                supplier_address_line3: businessProfile.line3 || '',
-                supplier_postal_code: businessProfile.postal_code || '',
+                supplier_contact_number: businessProfile.contact_phone || '',
+                supplier_address_line1: businessProfile.address_line_0 || '',
+                supplier_address_line2: businessProfile.address_line_1 || '',
+                supplier_address_line3: businessProfile.address_line_2 || '',
+                supplier_postal_code: businessProfile.postal_zone || '',
                 supplier_city: businessProfile.city || '',
                 supplier_state: businessProfile.state || '',
-                supplier_country: businessProfile.country || 'MY',
-                supplier_contact_number: businessProfile.contact_number || '',
-                // Clear Buyer (optional, user might want to keep if switching types, but safer to clear or leave as is? Let's leave as is for now to avoid data loss, or user can clear manually)
+                supplier_country: businessProfile.country || 'MYS',
             }));
         } else if (isSelfBilled) {
-            // Prefill Buyer
             setData(d => ({
                 ...d,
                 buyer_name: businessProfile.business_name || '',
                 buyer_tin: businessProfile.tax_identification_number || '',
                 buyer_registration_number: businessProfile.business_registration_number || '',
                 buyer_sst_registration_number: businessProfile.sst_registration_number || '',
-                buyer_email: businessProfile.business_email || '',
-                buyer_address_line1: businessProfile.line1 || '',
-                buyer_address_line2: businessProfile.line2 || '',
-                buyer_address_line3: businessProfile.line3 || '',
-                buyer_postal_code: businessProfile.postal_code || '',
+                buyer_email: businessProfile.contact_email || '',
+                buyer_contact_number: businessProfile.contact_phone || '',
+                buyer_address_line1: businessProfile.address_line_0 || '',
+                buyer_address_line2: businessProfile.address_line_1 || '',
+                buyer_address_line3: businessProfile.address_line_2 || '',
+                buyer_postal_code: businessProfile.postal_zone || '',
                 buyer_city: businessProfile.city || '',
                 buyer_state: businessProfile.state || '',
                 buyer_country: businessProfile.country || 'MY',
-                buyer_contact_number: businessProfile.contact_number || '',
-                // Prefill Supplier with minimal defaults if needed, or leave blank
             }));
         }
     }, [data.invoice_type, businessProfile]);
@@ -174,11 +243,14 @@ export default function Create({ businessProfile }) {
             let discount = discountAmt;
 
             if (discountRate > 0) {
+                // If rate is provided, overwrite amount
                 discount = subtotal * (discountRate / 100);
             }
 
             let taxableAmount = subtotal - discount;
-            let taxAmount = taxableAmount * (taxRate / 100);
+            // Round tax amount to 2 decimal places to match backend validation expectation
+            let rawTaxAmount = taxableAmount * (taxRate / 100);
+            let taxAmount = Math.round((rawTaxAmount + Number.EPSILON) * 100) / 100;
 
             return {
                 ...item,
@@ -191,23 +263,25 @@ export default function Create({ businessProfile }) {
 
         const updatedItems = data.line_items.map(calculateLineItem);
 
-        // Check if values actually changed to avoid infinite loop
+        // Deep comparison to avoid infinite loops
         if (JSON.stringify(updatedItems) !== JSON.stringify(data.line_items)) {
             setData('line_items', updatedItems);
-            return; // Let the next render cycle handle the totals
+            // Return here to allow re-render with new line items before calculating totals
+            return;
         }
 
-        const totalExcl = updatedItems.reduce((sum, item) => sum + item.total_excluding_tax_per_line, 0);
-        const totalTax = updatedItems.reduce((sum, item) => sum + item.tax_amount, 0);
+        const totalExcl = updatedItems.reduce((sum, item) => sum + (parseFloat(item.total_excluding_tax_per_line) || 0), 0);
+        // Sum the already rounded tax amounts
+        const totalTax = updatedItems.reduce((sum, item) => sum + (parseFloat(item.tax_amount) || 0), 0);
         const totalIncl = totalExcl + totalTax;
 
         const totalPayable = totalIncl - (parseFloat(data.total_discount_value) || 0) + (parseFloat(data.total_fee_charge_amount) || 0);
 
         if (
-            data.total_excluding_tax !== totalExcl ||
-            data.total_tax_amount !== totalTax ||
-            data.total_including_tax !== totalIncl ||
-            data.total_payable_amount !== totalPayable
+            Math.abs(data.total_excluding_tax - totalExcl) > 0.001 ||
+            Math.abs(data.total_tax_amount - totalTax) > 0.001 ||
+            Math.abs(data.total_including_tax - totalIncl) > 0.001 ||
+            Math.abs(data.total_payable_amount - totalPayable) > 0.001
         ) {
             setData(d => ({
                 ...d,
@@ -218,12 +292,7 @@ export default function Create({ businessProfile }) {
             }));
         }
 
-    }, [
-        JSON.stringify(data.line_items.map(i => ({ q: i.quantity, p: i.unit_price, dr: i.discount_rate, da: i.discount_amount, tr: i.tax_rate }))),
-        data.total_discount_value,
-        data.total_fee_charge_amount
-    ]);
-
+    }, [data.line_items, data.total_discount_value, data.total_fee_charge_amount]);
 
     const addLineItem = () => {
         setData('line_items', [...data.line_items, {
@@ -258,200 +327,493 @@ export default function Create({ businessProfile }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('invoices.store'));
+
+        // Ensure totals are recalculated one last time before submission to avoid mismatches
+        // This is a safety measure; the useEffect should have handled it, but manual entry might have race conditions.
+        // For now, we trust the current state 'data' which is updated by useEffect.
+
+        if (isEditMode) {
+            put(route('invoices.update', invoice.id));
+        } else {
+            post(route('invoices.store'));
+        }
     };
 
+    const sections = [
+        { id: 'parties', label: 'Parties' },
+        { id: 'supplier-details', label: 'Supplier Details' },
+        { id: 'buyer-details', label: 'Buyer Details' },
+        { id: 'address', label: 'Address' },
+        { id: 'contact-number', label: 'Contact Number' },
+        { id: 'invoice-details', label: 'Invoice Details' },
+        { id: 'unique-id', label: 'Unique ID & References' },
+        { id: 'shipping-info', label: 'Shipping Information' },
+        { id: 'products-services', label: 'Products/Services' },
+        { id: 'payment-info', label: 'Payment Info' },
+    ];
+
+    const scrollToSection = (id) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setActiveSection(id);
+        }
+    };
+
+    // Intersection Observer for scroll spy
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setActiveSection(entry.target.id);
+                }
+            });
+        }, { threshold: 0.3, rootMargin: "-20% 0px -50% 0px" });
+
+        sections.forEach(section => {
+            const el = document.getElementById(section.id);
+            if (el) observer.observe(el);
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
+
     return (
-        <AuthenticatedLayout
-            header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Invoice</h2>}
-        >
+        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Create Invoice</h2>}>
             <Head title="Create Invoice" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <form onSubmit={submit} className="space-y-6">
-                        {/* Invoice Identification */}
-                        <div className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800">
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Invoice Identification</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <InputLabel htmlFor="invoice_type" value="Invoice Type" />
-                                    <select
-                                        id="invoice_type"
-                                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700"
-                                        value={data.invoice_type}
-                                        onChange={(e) => setData('invoice_type', e.target.value)}
+                    <form onSubmit={submit} className="flex gap-8 items-start">
+
+                        {/* Sidebar Navigation */}
+                        <div className="w-64 flex-shrink-0 sticky top-4 bg-white dark:bg-gray-800 rounded-lg shadow p-4 hidden lg:block">
+                            <div className="flex items-center space-x-2 mb-6 text-gray-500 text-sm">
+                                <span>⬇ Jump to a section below</span>
+                            </div>
+                            <nav className="space-y-1">
+                                {sections.map((section) => (
+                                    <button
+                                        key={section.id}
+                                        type="button"
+                                        onClick={() => scrollToSection(section.id)}
+                                        className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeSection === section.id
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                                            : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700'
+                                            }`}
                                     >
-                                        <option value="01">Invoice</option>
-                                        <option value="02">Credit Note</option>
-                                        <option value="03">Debit Note</option>
-                                        <option value="04">Refund Note</option>
-                                        <option value="11">Self-billed Invoice</option>
-                                        <option value="12">Self-billed Credit Note</option>
-                                        <option value="13">Self-billed Debit Note</option>
-                                        <option value="14">Self-billed Refund Note</option>
-                                    </select>
-                                    <InputError message={errors.invoice_type} className="mt-2" />
-                                </div>
-                                <div>
-                                    <InputLabel htmlFor="invoice_date_time" value="Date & Time" />
-                                    <TextInput
-                                        id="invoice_date_time"
-                                        type="datetime-local"
-                                        className="mt-1 block w-full"
-                                        value={data.invoice_date_time}
-                                        onChange={(e) => setData('invoice_date_time', e.target.value)}
-                                    />
-                                    <InputError message={errors.invoice_date_time} className="mt-2" />
-                                </div>
-                                {/* Frequency & Billing Period could be added here */}
-                            </div>
+                                        {section.label}
+                                    </button>
+                                ))}
+                            </nav>
                         </div>
 
-                        {/* Supplier Details */}
-                        <div className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800">
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Supplier Details</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <InputLabel htmlFor="supplier_name" value="Name" />
-                                    <TextInput id="supplier_name" className="mt-1 block w-full" value={data.supplier_name} onChange={(e) => setData('supplier_name', e.target.value)} />
-                                    <InputError message={errors.supplier_name} className="mt-2" />
-                                </div>
-                                <div>
-                                    <InputLabel htmlFor="supplier_tin" value="TIN" />
-                                    <TextInput id="supplier_tin" className="mt-1 block w-full" value={data.supplier_tin} onChange={(e) => setData('supplier_tin', e.target.value)} />
-                                    <InputError message={errors.supplier_tin} className="mt-2" />
-                                </div>
-                                {/* Add other supplier fields similarly */}
-                                <div className="md:col-span-2">
-                                    <InputLabel htmlFor="supplier_address_line1" value="Address Line 1" />
-                                    <TextInput id="supplier_address_line1" className="mt-1 block w-full" value={data.supplier_address_line1} onChange={(e) => setData('supplier_address_line1', e.target.value)} />
-                                    <InputError message={errors.supplier_address_line1} className="mt-2" />
-                                </div>
-                                <div>
-                                    <InputLabel htmlFor="supplier_email" value="Email" />
-                                    <TextInput id="supplier_email" type="email" className="mt-1 block w-full" value={data.supplier_email} onChange={(e) => setData('supplier_email', e.target.value)} />
-                                    <InputError message={errors.supplier_email} className="mt-2" />
-                                </div>
-                                <div>
-                                    <InputLabel htmlFor="supplier_msic_code" value="MSIC Code" />
-                                    <SimpleCombobox
-                                        items={msicCodes}
-                                        value={msicCodes.find(c => c.Code === data.supplier_msic_code) || null}
-                                        onChange={(val) => setData('supplier_msic_code', val ? val.Code : '')}
-                                        displayValue={(item) => item ? `${item.Code} - ${item.Description}` : ''}
-                                        placeholder="Select MSIC Code"
-                                    />
-                                    <InputError message={errors.supplier_msic_code} className="mt-2" />
-                                </div>
-                                {/* ... State, Code, etc */}
-                            </div>
-                        </div>
+                        {/* Main Content Area */}
+                        <div className="flex-1 space-y-8 pb-32">
 
-                        {/* Buyer Details */}
-                        <div className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800">
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Buyer Details</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <InputLabel htmlFor="buyer_name" value="Name" />
-                                    <TextInput id="buyer_name" className="mt-1 block w-full" value={data.buyer_name} onChange={(e) => setData('buyer_name', e.target.value)} />
-                                    <InputError message={errors.buyer_name} className="mt-2" />
+                            {/* Parties */}
+                            <div id="parties" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Parties</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <InputLabel htmlFor="supplier_name" value="Supplier's Name" />
+                                        <TextInput id="supplier_name" className="mt-1 block w-full bg-gray-50" value={data.supplier_name} onChange={(e) => setData('supplier_name', e.target.value)} placeholder="Auto-filled from Profile" />
+                                        <InputError message={errors.supplier_name} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="buyer_name" value="Buyer's Name" />
+                                        <TextInput id="buyer_name" className="mt-1 block w-full" value={data.buyer_name} onChange={(e) => setData('buyer_name', e.target.value)} />
+                                        <InputError message={errors.buyer_name} className="mt-2" />
+                                    </div>
                                 </div>
-                                <div>
-                                    <InputLabel htmlFor="buyer_tin" value="TIN" />
-                                    <TextInput id="buyer_tin" className="mt-1 block w-full" value={data.buyer_tin} onChange={(e) => setData('buyer_tin', e.target.value)} />
-                                    <InputError message={errors.buyer_tin} className="mt-2" />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <InputLabel htmlFor="buyer_address_line1" value="Address Line 1" />
-                                    <TextInput id="buyer_address_line1" className="mt-1 block w-full" value={data.buyer_address_line1} onChange={(e) => setData('buyer_address_line1', e.target.value)} />
-                                    <InputError message={errors.buyer_address_line1} className="mt-2" />
-                                </div>
-                                <div>
-                                    <InputLabel htmlFor="buyer_email" value="Email" />
-                                    <TextInput id="buyer_email" type="email" className="mt-1 block w-full" value={data.buyer_email} onChange={(e) => setData('buyer_email', e.target.value)} />
-                                    <InputError message={errors.buyer_email} className="mt-2" />
-                                </div>
-                                {/* ... State, Code, etc */}
-                            </div>
-                        </div>
-
-                        {/* Line Items */}
-                        <div className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Line Items</h3>
-                                <PrimaryButton type="button" onClick={addLineItem} className="bg-green-600 hover:bg-green-700">Add Item</PrimaryButton>
                             </div>
 
-                            <div className="space-y-4">
-                                {data.line_items.map((item, index) => (
-                                    <div key={index} className="border p-4 rounded-md dark:border-gray-700 relative">
-                                        <button type="button" onClick={() => removeLineItem(index)} className="absolute top-2 right-2 text-red-500 hover:text-red-700">
-                                            Remove
-                                        </button>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-                                            <div className="lg:col-span-2">
-                                                <InputLabel value="Description" />
-                                                <TextInput
-                                                    className="w-full"
-                                                    value={item.product_service_description}
-                                                    onChange={(e) => handleLineItemChange(index, 'product_service_description', e.target.value)}
-                                                />
-                                            </div>
-                                            <div>
-                                                <InputLabel value="Qty" />
-                                                <TextInput type="number" step="any" className="w-full" value={item.quantity} onChange={(e) => handleLineItemChange(index, 'quantity', e.target.value)} />
-                                            </div>
-                                            <div>
-                                                <InputLabel value="Price" />
-                                                <TextInput type="number" step="0.01" className="w-full" value={item.unit_price} onChange={(e) => handleLineItemChange(index, 'unit_price', e.target.value)} />
-                                            </div>
-                                            <div>
-                                                <InputLabel value="Tax Type" />
-                                                <select className="w-full border-gray-300 rounded-md dark:bg-gray-900" value={item.tax_type} onChange={(e) => handleLineItemChange(index, 'tax_type', e.target.value)}>
-                                                    <option value="01">Sales Tax</option>
-                                                    <option value="02">Service Tax</option>
-                                                    <option value="06">Not Applicable</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <InputLabel value="Subtotal" />
-                                                <div className="py-2 px-3 bg-gray-100 dark:bg-gray-700 rounded text-right">
-                                                    {item.subtotal.toFixed(2)}
+                            {/* Supplier Details */}
+                            <div id="supplier-details" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Supplier details</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <InputLabel htmlFor="supplier_tin" value="Tax Identification No." />
+                                        <TextInput id="supplier_tin" className="mt-1 block w-full" value={data.supplier_tin} onChange={(e) => setData('supplier_tin', e.target.value)} />
+                                        <InputError message={errors.supplier_tin} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="supplier_registration_number" value="Business Registration No." />
+                                        <TextInput id="supplier_registration_number" className="mt-1 block w-full" value={data.supplier_registration_number} onChange={(e) => setData('supplier_registration_number', e.target.value)} />
+                                        <InputError message={errors.supplier_registration_number} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="supplier_sst_registration_number" value="SST Registration No." />
+                                        <TextInput id="supplier_sst_registration_number" className="mt-1 block w-full" value={data.supplier_sst_registration_number} onChange={(e) => setData('supplier_sst_registration_number', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="supplier_tourism_tax_number" value="Tourism Tax Registration No." />
+                                        <TextInput id="supplier_tourism_tax_number" className="mt-1 block w-full" value={data.supplier_tourism_tax_number} onChange={(e) => setData('supplier_tourism_tax_number', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="supplier_email" value="Email" />
+                                        <TextInput id="supplier_email" type="email" className="mt-1 block w-full" value={data.supplier_email} onChange={(e) => setData('supplier_email', e.target.value)} />
+                                        <InputError message={errors.supplier_email} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="supplier_msic_code" value="MSIC Code" />
+                                        <SimpleCombobox
+                                            options={msicCodes}
+                                            value={data.supplier_msic_code}
+                                            onChange={(val) => setData('supplier_msic_code', val)}
+                                            valueKey="Code"
+                                            displayKey="Code"
+                                            displayValue={(option) => option ? `${option.Code} - ${option.Description}` : ''}
+                                            placeholder="Search Code"
+                                        />
+                                        <InputError message={errors.supplier_msic_code} className="mt-2" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <InputLabel htmlFor="supplier_business_activity_description" value="Business Activity Description" />
+                                        <TextInput id="supplier_business_activity_description" className="mt-1 block w-full" value={data.supplier_business_activity_description} onChange={(e) => setData('supplier_business_activity_description', e.target.value)} />
+                                        <InputError message={errors.supplier_business_activity_description} className="mt-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Buyer Details */}
+                            <div id="buyer-details" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Buyer details</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <InputLabel htmlFor="buyer_tin" value="Tax Identification No." />
+                                        <TextInput id="buyer_tin" className="mt-1 block w-full" value={data.buyer_tin} onChange={(e) => setData('buyer_tin', e.target.value)} />
+                                        <InputError message={errors.buyer_tin} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="buyer_registration_number" value="Business Registration / Identification / Passport No." />
+                                        <TextInput id="buyer_registration_number" className="mt-1 block w-full" value={data.buyer_registration_number} onChange={(e) => setData('buyer_registration_number', e.target.value)} />
+                                        <InputError message={errors.buyer_registration_number} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="buyer_sst_registration_number" value="SST Registration No. (Optional)" />
+                                        <TextInput id="buyer_sst_registration_number" className="mt-1 block w-full" value={data.buyer_sst_registration_number} onChange={(e) => setData('buyer_sst_registration_number', e.target.value)} />
+                                        <InputError message={errors.buyer_sst_registration_number} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="buyer_email" value="Email" />
+                                        <TextInput id="buyer_email" type="email" className="mt-1 block w-full" value={data.buyer_email} onChange={(e) => setData('buyer_email', e.target.value)} />
+                                        <InputError message={errors.buyer_email} className="mt-2" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Address */}
+                            <div id="address" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Address</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Supplier Address Column */}
+                                    <div className="space-y-4">
+                                        <h4 className="font-semibold text-gray-700 dark:text-gray-300">Supplier Address</h4>
+                                        <div><InputLabel value="Line 1" /><TextInput className="w-full" value={data.supplier_address_line1} onChange={(e) => setData('supplier_address_line1', e.target.value)} /><InputError message={errors.supplier_address_line1} /></div>
+                                        <div><InputLabel value="Line 2" /><TextInput className="w-full" value={data.supplier_address_line2} onChange={(e) => setData('supplier_address_line2', e.target.value)} /></div>
+                                        <div><InputLabel value="Line 3" /><TextInput className="w-full" value={data.supplier_address_line3} onChange={(e) => setData('supplier_address_line3', e.target.value)} /></div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div><InputLabel value="Postcode" /><TextInput className="w-full" value={data.supplier_postal_code} onChange={(e) => setData('supplier_postal_code', e.target.value)} /></div>
+                                            <div><InputLabel value="City" /><TextInput className="w-full" value={data.supplier_city} onChange={(e) => setData('supplier_city', e.target.value)} /></div>
+                                        </div>
+                                        <div>
+                                            <InputLabel value="State" />
+                                            <SimpleCombobox
+                                                options={states}
+                                                value={data.supplier_state}
+                                                onChange={(val) => setData('supplier_state', val)}
+                                                valueKey="Code"
+                                                displayKey="State"
+                                                placeholder="Select State"
+                                            />
+                                            <InputError message={errors.supplier_state} />
+                                        </div>
+                                        <div>
+                                            <InputLabel value="Country" />
+                                            <SimpleCombobox
+                                                options={countries}
+                                                value={data.supplier_country}
+                                                onChange={(val) => setData('supplier_country', val)}
+                                                valueKey="Code"
+                                                displayKey="Country"
+                                                placeholder="Select Country"
+                                            />
+                                            <InputError message={errors.supplier_country} />
+                                        </div>
+                                    </div>
+
+                                    {/* Buyer Address Column */}
+                                    <div className="space-y-4">
+                                        <h4 className="font-semibold text-gray-700 dark:text-gray-300">Buyer Address</h4>
+                                        <div><InputLabel value="Line 1" /><TextInput className="w-full" value={data.buyer_address_line1} onChange={(e) => setData('buyer_address_line1', e.target.value)} /><InputError message={errors.buyer_address_line1} /></div>
+                                        <div><InputLabel value="Line 2" /><TextInput className="w-full" value={data.buyer_address_line2} onChange={(e) => setData('buyer_address_line2', e.target.value)} /></div>
+                                        <div><InputLabel value="Line 3" /><TextInput className="w-full" value={data.buyer_address_line3} onChange={(e) => setData('buyer_address_line3', e.target.value)} /></div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div><InputLabel value="Postcode" /><TextInput className="w-full" value={data.buyer_postal_code} onChange={(e) => setData('buyer_postal_code', e.target.value)} /></div>
+                                            <div><InputLabel value="City" /><TextInput className="w-full" value={data.buyer_city} onChange={(e) => setData('buyer_city', e.target.value)} /></div>
+                                        </div>
+                                        <div>
+                                            <InputLabel value="State" />
+                                            <SimpleCombobox
+                                                options={states}
+                                                value={data.buyer_state}
+                                                onChange={(val) => setData('buyer_state', val)}
+                                                valueKey="Code"
+                                                displayKey="State"
+                                                placeholder="Select State"
+                                            />
+                                            <InputError message={errors.buyer_state} />
+                                        </div>
+                                        <div>
+                                            <InputLabel value="Country" />
+                                            <SimpleCombobox
+                                                options={countries}
+                                                value={data.buyer_country}
+                                                onChange={(val) => setData('buyer_country', val)}
+                                                valueKey="Code"
+                                                displayKey="Country"
+                                                placeholder="Select Country"
+                                            />
+                                            <InputError message={errors.buyer_country} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Number */}
+                            <div id="contact-number" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Contact number</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <InputLabel htmlFor="supplier_contact_number" value="Supplier's contact number" />
+                                        <TextInput id="supplier_contact_number" className="mt-1 block w-full" value={data.supplier_contact_number} onChange={(e) => setData('supplier_contact_number', e.target.value)} />
+                                        <InputError message={errors.supplier_contact_number} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="buyer_contact_number" value="Buyer's contact number" />
+                                        <TextInput id="buyer_contact_number" className="mt-1 block w-full" value={data.buyer_contact_number} onChange={(e) => setData('buyer_contact_number', e.target.value)} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Invoice Details */}
+                            <div id="invoice-details" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Invoice details</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <InputLabel htmlFor="invoice_type" value="Invoice Type" />
+                                        <select id="invoice_type" className="mt-1 block w-full border-gray-300 rounded-md dark:bg-gray-900" value={data.invoice_type} onChange={(e) => setData('invoice_type', e.target.value)}>
+                                            <option value="01">Invoice</option>
+                                            <option value="02">Credit Note</option>
+                                            <option value="03">Debit Note</option>
+                                            <option value="04">Refund Note</option>
+                                            <option value="11">Self-billed Invoice</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="invoice_date_time" value="Invoice Date & Time" />
+                                        <TextInput id="invoice_date_time" type="datetime-local" className="mt-1 block w-full" value={data.invoice_date_time} onChange={(e) => setData('invoice_date_time', e.target.value)} />
+                                        <InputError message={errors.invoice_date_time} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="currency_code" value="Currency Code" />
+                                        <TextInput id="currency_code" className="mt-1 block w-full" value={data.currency_code} onChange={(e) => setData('currency_code', e.target.value)} />
+                                        <InputError message={errors.currency_code} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="currency_exchange_rate" value="Currency Exchange Rate (if not MYR)" />
+                                        <TextInput id="currency_exchange_rate" type="number" step="any" className="mt-1 block w-full" value={data.currency_exchange_rate} onChange={(e) => setData('currency_exchange_rate', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="frequency_of_billing" value="Frequency of Billing" />
+                                        <select id="frequency_of_billing" className="mt-1 block w-full border-gray-300 rounded-md dark:bg-gray-900" value={data.frequency_of_billing} onChange={(e) => setData('frequency_of_billing', e.target.value)}>
+                                            <option value="">Select Frequency</option>
+                                            <option value="01">Daily</option>
+                                            <option value="02">Weekly</option>
+                                            <option value="03">Biweekly</option>
+                                            <option value="04">Monthly</option>
+                                            <option value="05">Bimonthly</option>
+                                            <option value="06">Quarterly</option>
+                                        </select>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div><InputLabel value="Billing Period Start" /><TextInput type="date" className="w-full" value={data.billing_period_start_date} onChange={(e) => setData('billing_period_start_date', e.target.value)} /></div>
+                                        <div><InputLabel value="Billing Period End" /><TextInput type="date" className="w-full" value={data.billing_period_end_date} onChange={(e) => setData('billing_period_end_date', e.target.value)} /></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Unique ID & References */}
+                            <div id="unique-id" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Unique ID number</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <InputLabel htmlFor="original_einvoice_reference" value="Original e-Invoice Ref. (DN/CN)" />
+                                        <TextInput id="original_einvoice_reference" className="mt-1 block w-full" value={data.original_einvoice_reference} onChange={(e) => setData('original_einvoice_reference', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="bill_reference_number" value="Bill Reference Number" />
+                                        <TextInput id="bill_reference_number" className="mt-1 block w-full" value={data.bill_reference_number} onChange={(e) => setData('bill_reference_number', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="customs_form_reference" value="Customs Form No. (K1 etc)" />
+                                        <TextInput id="customs_form_reference" className="mt-1 block w-full" value={data.customs_form_reference} onChange={(e) => setData('customs_form_reference', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="incoterms" value="Incoterms" />
+                                        <TextInput id="incoterms" className="mt-1 block w-full" value={data.incoterms} onChange={(e) => setData('incoterms', e.target.value)} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Shipping Information */}
+                            <div id="shipping-info" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Shipping Information</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <InputLabel value="Shipping Recipient Name" />
+                                        <TextInput className="mt-1 block w-full" value={data.shipping_recipient_name} onChange={(e) => setData('shipping_recipient_name', e.target.value)} />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <InputLabel value="Shipping Address Line 1" />
+                                        <TextInput className="mt-1 block w-full" value={data.shipping_address_line1} onChange={(e) => setData('shipping_address_line1', e.target.value)} />
+                                    </div>
+                                    {/* Additional shipping fields can be added here if needed */}
+                                </div>
+                            </div>
+
+
+                            {/* Products/Services */}
+                            <div id="products-services" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Products/services</h3>
+                                    <PrimaryButton type="button" onClick={addLineItem}>+ Add Item</PrimaryButton>
+                                </div>
+                                <div className="space-y-6">
+                                    {data.line_items.map((item, index) => (
+                                        <div key={index} className="border p-4 rounded bg-gray-50 dark:bg-gray-700 relative">
+                                            <button type="button" onClick={() => removeLineItem(index)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold">✕</button>
+                                            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                                                <div className="md:col-span-2">
+                                                    <InputLabel value="Description" className="text-xs" />
+                                                    <TextInput className="w-full text-sm" value={item.product_service_description} onChange={(e) => handleLineItemChange(index, 'product_service_description', e.target.value)} />
+                                                    <InputError message={errors[`line_items.${index}.product_service_description`]} />
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="Classib. Code" className="text-xs" />
+                                                    <TextInput className="w-full text-sm" value={item.classification_code} onChange={(e) => handleLineItemChange(index, 'classification_code', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="UOM" className="text-xs" />
+                                                    <AsyncSimpleCombobox
+                                                        endpoint={route('ref.unit-types')}
+                                                        value={item.unit_of_measure}
+                                                        onChange={(val) => handleLineItemChange(index, 'unit_of_measure', val)}
+                                                        valueKey="Code"
+                                                        displayKey="Name"
+                                                        placeholder="Unit"
+                                                        className="text-sm"
+                                                    />
+                                                    <InputError message={errors[`line_items.${index}.unit_of_measure`]} />
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="Qty" className="text-xs" />
+                                                    <TextInput type="number" className="w-full text-sm" value={item.quantity} onChange={(e) => handleLineItemChange(index, 'quantity', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="Unit Price" className="text-xs" />
+                                                    <TextInput type="number" step="0.01" className="w-full text-sm" value={item.unit_price} onChange={(e) => handleLineItemChange(index, 'unit_price', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="Subtotal" className="text-xs" />
+                                                    <div className="py-2 px-2 bg-gray-200 rounded text-right text-sm">{item.subtotal.toFixed(2)}</div>
+                                                </div>
+                                                {/* Second Row for Tax/Disc */}
+                                                <div className="md:col-span-2">
+                                                    <InputLabel value="Tax Type" className="text-xs" />
+                                                    <select className="w-full border-gray-300 rounded-md text-sm" value={item.tax_type} onChange={(e) => handleLineItemChange(index, 'tax_type', e.target.value)}>
+                                                        <option value="01">Sales Tax</option>
+                                                        <option value="02">Service Tax</option>
+                                                        <option value="06">Not Applicable</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="Tax Rate %" className="text-xs" />
+                                                    <TextInput type="number" className="w-full text-sm" value={item.tax_rate} onChange={(e) => handleLineItemChange(index, 'tax_rate', e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="Tax Amt" className="text-xs" />
+                                                    <div className="py-2 px-2 bg-gray-200 rounded text-right text-sm">{item.tax_amount.toFixed(2)}</div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <InputError message={errors[`line_items.${index}.product_service_description`]} />
-                                    </div>
-                                ))}
-                            </div>
-                            <InputError message={errors.line_items} className="mt-2" />
-                        </div>
+                                    ))}
+                                </div>
+                                <InputError message={errors.line_items} className="mt-4" />
 
-                        {/* Totals */}
-                        <div className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800">
-                            <div className="flex justify-end">
-                                <div className="w-full md:w-1/3 space-y-2">
-                                    <div className="flex justify-between">
-                                        <span>Subtotal (Excl. Tax)</span>
-                                        <span>{data.total_excluding_tax.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>Total Tax</span>
-                                        <span>{data.total_tax_amount.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between pt-2 border-t font-bold text-lg">
-                                        <span>Total Payable</span>
-                                        <span>{data.total_payable_amount.toFixed(2)}</span>
+                                <div className="mt-6 flex justify-end">
+                                    <div className="w-full md:w-1/3 bg-gray-100 p-4 rounded">
+                                        <div className="flex justify-between mb-2"><span>Subtotal</span><span>{data.total_excluding_tax.toFixed(2)}</span></div>
+                                        <InputError message={errors.total_excluding_tax} className="text-right mb-2" />
+
+                                        <div className="flex justify-between mb-2"><span>Total Tax</span><span>{data.total_tax_amount.toFixed(2)}</span></div>
+                                        <InputError message={errors.total_tax_amount} className="text-right mb-2" />
+
+                                        <div className="flex justify-between border-t border-gray-300 pt-2 font-bold text-lg"><span>Total Payable</span><span>{data.total_payable_amount.toFixed(2)}</span></div>
+                                        <InputError message={errors.total_payable_amount} className="text-right" />
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex justify-end">
-                            <PrimaryButton disabled={processing}>
-                                Create Invoice
-                            </PrimaryButton>
+                            {/* Payment Info */}
+                            <div id="payment-info" className="bg-white p-6 shadow sm:rounded-lg dark:bg-gray-800 scroll-mt-20">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Payment info</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <InputLabel htmlFor="payment_mode" value="Payment Mode" />
+                                        <select id="payment_mode" className="mt-1 block w-full border-gray-300 rounded-md dark:bg-gray-900" value={data.payment_mode} onChange={(e) => setData('payment_mode', e.target.value)}>
+                                            <option value="">Select Mode</option>
+                                            <option value="01">Cash</option>
+                                            <option value="02">Credit Card</option>
+                                            <option value="03">Bank Transfer</option>
+                                            <option value="04">Cheque</option>
+                                            <option value="05">E-Wallet</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="bank_account_number" value="Bank Account Number" />
+                                        <TextInput id="bank_account_number" className="mt-1 block w-full" value={data.bank_account_number} onChange={(e) => setData('bank_account_number', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="payment_terms" value="Payment Terms" />
+                                        <TextInput id="payment_terms" className="mt-1 block w-full" value={data.payment_terms} onChange={(e) => setData('payment_terms', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <InputLabel htmlFor="payment_amount" value="Payment Amount" />
+                                        <TextInput id="payment_amount" type="number" step="0.01" className="mt-1 block w-full" value={data.payment_amount} onChange={(e) => setData('payment_amount', e.target.value)} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Submit */}
+                            <div className="flex flex-col items-end pt-6">
+                                {Object.keys(errors).length > 0 && (
+                                    <div className="mb-4 p-4 rounded-md bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-200">
+                                        <p className="font-bold mb-2">There are errors in the form:</p>
+                                        <ul className="list-disc list-inside">
+                                            {Object.entries(errors).map(([key, error]) => (
+                                                <li key={key}>{error}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                                <PrimaryButton className="w-full md:w-auto h-12 text-lg justify-center" disabled={processing}>
+                                    {isEditMode ? 'Update Invoice' : 'Create Invoice'}
+                                </PrimaryButton>
+                            </div>
+
                         </div>
                     </form>
                 </div>
