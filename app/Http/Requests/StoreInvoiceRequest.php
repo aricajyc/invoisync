@@ -24,6 +24,7 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             // ==================== INVOICE IDENTIFICATION ====================
+            'invoice_number' => ['nullable', 'string', 'max:255'],
             'invoice_type' => ['required', 'in:01,02,03,04'],
             'invoice_date_time' => ['required', 'date_format:Y-m-d H:i:s,Y-m-d\TH:i:s,Y-m-d\TH:i'],
             'original_einvoice_reference' => ['nullable', 'string', 'max:255', 
@@ -54,9 +55,9 @@ class StoreInvoiceRequest extends FormRequest
             // ==================== BUYER DETAILS (MANDATORY) ====================
             'buyer_name' => ['required', 'string', 'max:300'],
             'buyer_tin' => ['required', 'string', 'max:20'],
-            'buyer_registration_number' => ['nullable', 'string', 'max:50'],
+            'buyer_registration_number' => ['required', 'string', 'max:50'],
             'buyer_sst_registration_number' => ['nullable', 'string', 'max:20'],
-            'buyer_email' => ['nullable', 'email', 'max:255'],
+            'buyer_email' => ['required', 'email', 'max:255'],
             'buyer_address_line1' => ['required', 'string', 'max:255'],
             'buyer_address_line2' => ['nullable', 'string', 'max:255'],
             'buyer_address_line3' => ['nullable', 'string', 'max:255'],

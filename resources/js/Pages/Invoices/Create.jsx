@@ -14,6 +14,7 @@ export default function Create({ businessProfile, invoice }) {
 
     const { data, setData, post, put, processing, errors, transform } = useForm({
         // Invoice Identification
+        invoice_number: invoice?.invoice_number || '',
         invoice_type: invoice?.invoice_type || '01',
         invoice_date_time: invoice?.invoice_date_time
             ? new Date(invoice.invoice_date_time).toISOString().slice(0, 16)
@@ -325,6 +326,28 @@ export default function Create({ businessProfile, invoice }) {
         setData('line_items', newItems);
     };
 
+    const [analysisResult, setAnalysisResult] = useState(null);
+    const [analyzing, setAnalyzing] = useState(false);
+
+    const analyzeInvoice = async () => {
+        setAnalyzing(true);
+        setAnalysisResult(null);
+
+        try {
+            const res = await axios.post(route('invoices.detect-anomaly'), {
+                total_amount: data.total_including_tax,
+                tax_amount: data.total_tax_amount,
+                line_items: data.line_items.length
+            });
+            setAnalysisResult(res.data);
+        } catch (err) {
+            console.error(err);
+            // alert("Failed to analyze invoice.");
+        } finally {
+            setAnalyzing(false);
+        }
+    };
+
     const submit = (e) => {
         e.preventDefault();
 
@@ -418,7 +441,7 @@ export default function Create({ businessProfile, invoice }) {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <InputLabel htmlFor="supplier_name" value="Supplier's Name" />
-                                        <TextInput id="supplier_name" className="mt-1 block w-full bg-gray-50" value={data.supplier_name} onChange={(e) => setData('supplier_name', e.target.value)} placeholder="Auto-filled from Profile" />
+                                        <TextInput id="supplier_name" className="mt-1 block w-full bg-gray-50 dark:bg-gray-800" value={data.supplier_name} onChange={(e) => setData('supplier_name', e.target.value)} placeholder="Auto-filled from Profile" />
                                         <InputError message={errors.supplier_name} className="mt-2" />
                                     </div>
                                     <div>
@@ -487,8 +510,8 @@ export default function Create({ businessProfile, invoice }) {
                                         <InputError message={errors.buyer_tin} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="buyer_registration_number" value="Business Registration / Identification / Passport No." />
-                                        <TextInput id="buyer_registration_number" className="mt-1 block w-full" value={data.buyer_registration_number} onChange={(e) => setData('buyer_registration_number', e.target.value)} />
+                                        <InputLabel htmlFor="buyer_registration_number" value="Business Registration / Identification / Passport No." required={true} />
+                                        <TextInput id="buyer_registration_number" className="mt-1 block w-full" value={data.buyer_registration_number} onChange={(e) => setData('buyer_registration_number', e.target.value)} required />
                                         <InputError message={errors.buyer_registration_number} className="mt-2" />
                                     </div>
                                     <div>
@@ -497,8 +520,8 @@ export default function Create({ businessProfile, invoice }) {
                                         <InputError message={errors.buyer_sst_registration_number} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="buyer_email" value="Email" />
-                                        <TextInput id="buyer_email" type="email" className="mt-1 block w-full" value={data.buyer_email} onChange={(e) => setData('buyer_email', e.target.value)} />
+                                        <InputLabel htmlFor="buyer_email" value="Email" required={true} />
+                                        <TextInput id="buyer_email" type="email" className="mt-1 block w-full" value={data.buyer_email} onChange={(e) => setData('buyer_email', e.target.value)} required />
                                         <InputError message={errors.buyer_email} className="mt-2" />
                                     </div>
                                 </div>
@@ -603,8 +626,13 @@ export default function Create({ businessProfile, invoice }) {
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-6">Invoice details</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
+                                        <InputLabel htmlFor="invoice_number" value="Invoice No. (Leave blank to auto-generate)" />
+                                        <TextInput id="invoice_number" className="mt-1 block w-full" value={data.invoice_number} onChange={(e) => setData('invoice_number', e.target.value)} placeholder="e.g. INV-000123" />
+                                        <InputError message={errors.invoice_number} className="mt-2" />
+                                    </div>
+                                    <div>
                                         <InputLabel htmlFor="invoice_type" value="Invoice Type" />
-                                        <select id="invoice_type" className="mt-1 block w-full border-gray-300 rounded-md dark:bg-gray-900" value={data.invoice_type} onChange={(e) => setData('invoice_type', e.target.value)}>
+                                        <select id="invoice_type" className="mt-1 block w-full border-gray-300 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700" value={data.invoice_type} onChange={(e) => setData('invoice_type', e.target.value)}>
                                             <option value="01">Invoice</option>
                                             <option value="02">Credit Note</option>
                                             <option value="03">Debit Note</option>
@@ -628,7 +656,7 @@ export default function Create({ businessProfile, invoice }) {
                                     </div>
                                     <div>
                                         <InputLabel htmlFor="frequency_of_billing" value="Frequency of Billing" />
-                                        <select id="frequency_of_billing" className="mt-1 block w-full border-gray-300 rounded-md dark:bg-gray-900" value={data.frequency_of_billing} onChange={(e) => setData('frequency_of_billing', e.target.value)}>
+                                        <select id="frequency_of_billing" className="mt-1 block w-full border-gray-300 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700" value={data.frequency_of_billing} onChange={(e) => setData('frequency_of_billing', e.target.value)}>
                                             <option value="">Select Frequency</option>
                                             <option value="01">Daily</option>
                                             <option value="02">Weekly</option>
@@ -733,7 +761,7 @@ export default function Create({ businessProfile, invoice }) {
                                                 {/* Second Row for Tax/Disc */}
                                                 <div className="md:col-span-2">
                                                     <InputLabel value="Tax Type" className="text-xs" />
-                                                    <select className="w-full border-gray-300 rounded-md text-sm" value={item.tax_type} onChange={(e) => handleLineItemChange(index, 'tax_type', e.target.value)}>
+                                                    <select className="w-full border-gray-300 rounded-md text-sm dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700" value={item.tax_type} onChange={(e) => handleLineItemChange(index, 'tax_type', e.target.value)}>
                                                         <option value="01">Sales Tax</option>
                                                         <option value="02">Service Tax</option>
                                                         <option value="06">Not Applicable</option>
@@ -773,7 +801,7 @@ export default function Create({ businessProfile, invoice }) {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <InputLabel htmlFor="payment_mode" value="Payment Mode" />
-                                        <select id="payment_mode" className="mt-1 block w-full border-gray-300 rounded-md dark:bg-gray-900" value={data.payment_mode} onChange={(e) => setData('payment_mode', e.target.value)}>
+                                        <select id="payment_mode" className="mt-1 block w-full border-gray-300 rounded-md dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700" value={data.payment_mode} onChange={(e) => setData('payment_mode', e.target.value)}>
                                             <option value="">Select Mode</option>
                                             <option value="01">Cash</option>
                                             <option value="02">Credit Card</option>
@@ -809,9 +837,41 @@ export default function Create({ businessProfile, invoice }) {
                                         </ul>
                                     </div>
                                 )}
-                                <PrimaryButton className="w-full md:w-auto h-12 text-lg justify-center" disabled={processing}>
-                                    {isEditMode ? 'Update Invoice' : 'Create Invoice'}
-                                </PrimaryButton>
+                                {analysisResult && (
+                                    <div className={`mb-6 p-4 rounded-lg border ${analysisResult.is_anomaly ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
+                                        <div className="flex items-start">
+                                            <div className="flex-1">
+                                                <h4 className={`text-lg font-bold ${analysisResult.is_anomaly ? 'text-yellow-800' : 'text-green-800'}`}>
+                                                    {analysisResult.is_anomaly ? '⚠️ Anomaly Detected' : '✅ Invoice Looks Normal'}
+                                                </h4>
+                                                <div className="mt-2 text-sm text-gray-700">
+                                                    <p><strong>Confidence:</strong> {(analysisResult.confidence * 100).toFixed(0)}%</p>
+                                                    <p><strong>Recommendation:</strong> {analysisResult.recommendation}</p>
+                                                    {analysisResult.reasons && analysisResult.reasons.length > 0 && (
+                                                        <ul className="mt-2 list-disc list-inside">
+                                                            {analysisResult.reasons.map((reason, idx) => (
+                                                                <li key={idx} className="text-red-600">{reason}</li>
+                                                            ))}
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="flex flex-col md:flex-row gap-4 justify-end">
+                                    <button
+                                        type="button"
+                                        onClick={analyzeInvoice}
+                                        disabled={analyzing}
+                                        className="h-12 px-6 rounded-md bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50 transition-colors shadow-sm"
+                                    >
+                                        {analyzing ? 'Scanning...' : '✨ Analyze with AI'}
+                                    </button>
+                                    <PrimaryButton className="w-full md:w-auto h-12 text-lg justify-center" disabled={processing}>
+                                        {isEditMode ? 'Update Invoice' : 'Create Invoice'}
+                                    </PrimaryButton>
+                                </div>
                             </div>
 
                         </div>

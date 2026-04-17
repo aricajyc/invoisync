@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Login;
+use App\Models\UserActivity;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +32,15 @@ class AppServiceProvider extends ServiceProvider
                 ->numbers()
                 ->symbols()
                 ->uncompromised();
+        });
+
+        Event::listen(function (Login $event) {
+            UserActivity::create([
+                'user_id' => $event->user->id,
+                'action' => 'Login',
+                'description' => 'User logged in to the application',
+                'ip_address' => request()->ip(),
+            ]);
         });
     }
 

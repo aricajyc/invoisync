@@ -298,15 +298,17 @@ class Invoice extends Model
                   ($this->invoice_type === '02' ? 'CN' : 
                   ($this->invoice_type === '03' ? 'DN' : 'RN'));
         
-        $date = now()->format('Ymd');
-        $lastInvoice = static::whereDate('created_at', now()->toDateString())
-            ->where('invoice_type', $this->invoice_type)
-            ->latest()
+        $lastInvoice = static::where('invoice_type', $this->invoice_type)
+            ->where('invoice_number', 'like', $prefix . '-%')
+            ->orderBy('id', 'desc')
             ->first();
         
-        $sequence = $lastInvoice ? (intval(substr($lastInvoice->invoice_number, -6)) + 1) : 1;
+        $sequence = 1;
+        if ($lastInvoice && preg_match('/-(\d+)$/', $lastInvoice->invoice_number, $matches)) {
+            $sequence = intval($matches[1]) + 1;
+        }
         
-        return sprintf('%s-%s-%06d', $prefix, $date, $sequence);
+        return sprintf('%s-%06d', $prefix, $sequence);
     }
 
     public function isEditable(): bool

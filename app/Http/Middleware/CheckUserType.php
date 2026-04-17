@@ -10,7 +10,14 @@ class CheckUserType
 {
     public function handle(Request $request, Closure $next, string $type): Response
     {
-        if (auth()->user()->user_type !== $type) {
+        $user = auth()->user();
+        
+        // Admins can bypass type checks
+        if ($user->user_type === 'Admin') {
+            return $next($request);
+        }
+
+        if ($user->user_type !== $type) {
             return response()->json([
                 'message' => 'This feature is only available for ' . $type . ' users',
             ], 403);

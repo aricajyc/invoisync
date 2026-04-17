@@ -189,122 +189,329 @@ class MyInvoisService
     }
     
     /**
-     * Prepare invoice payload for MyInvois API
+     * Prepare invoice payload for MyInvois API in strict UBL format
      */
     protected function prepareInvoicePayload(Invoice $invoice): array
     {
-        $lineItems = [];
-        foreach ($invoice->lineItems as $item) {
-            $lineItems[] = [
-                'lineNumber' => $item->line_number,
-                'classification' => [
-                    'code' => $item->classification_code,
-                    'description' => $item->product_service_description,
-                ],
-                'quantity' => (float) $item->quantity,
-                'unitOfMeasure' => $item->unit_of_measure,
-                'unitPrice' => (float) $item->unit_price,
-                'subtotal' => (float) $item->subtotal,
-                'discount' => [
-                    'rate' => (float) ($item->discount_rate ?? 0),
-                    'amount' => (float) ($item->discount_amount ?? 0),
-                ],
-                'tax' => [
-                    'type' => $item->tax_type,
-                    'rate' => (float) $item->tax_rate,
-                    'amount' => (float) $item->tax_amount,
-                    'exemptionReason' => $item->tax_exemption_reason,
-                ],
-                'totals' => [
-                    'excludingTax' => (float) $item->total_excluding_tax_per_line,
-                    'includingTax' => (float) $item->total_including_tax_per_line,
-                ],
-            ];
-        }
-        
-        $payload = [
-            'version' => '1.0',
-            'invoiceType' => $invoice->invoice_type,
-            'invoiceNumber' => $invoice->invoice_number,
-            'invoiceDateTime' => $invoice->invoice_date_time->toIso8601String(),
-            'supplier' => [
-                'name' => $invoice->supplier_name,
-                'tin' => $invoice->supplier_tin,
-                'registrationNumber' => $invoice->supplier_registration_number,
-                'sstRegistrationNumber' => $invoice->supplier_sst_registration_number,
-                'tourismTaxNumber' => $invoice->supplier_tourism_tax_number,
-                'email' => $invoice->supplier_email,
-                'msicCode' => $invoice->supplier_msic_code,
-                'businessActivity' => $invoice->supplier_business_activity_description,
-                'address' => [
-                    'line1' => $invoice->supplier_address_line1,
-                    'line2' => $invoice->supplier_address_line2,
-                    'line3' => $invoice->supplier_address_line3,
-                    'postalCode' => $invoice->supplier_postal_code,
-                    'city' => $invoice->supplier_city,
-                    'state' => $invoice->supplier_state,
-                    'country' => $invoice->supplier_country,
-                ],
-                'contactNumber' => $invoice->supplier_contact_number,
-            ],
-            'buyer' => [
-                'name' => $invoice->buyer_name,
-                'tin' => $invoice->buyer_tin,
-                'registrationNumber' => $invoice->buyer_registration_number,
-                'sstRegistrationNumber' => $invoice->buyer_sst_registration_number,
-                'email' => $invoice->buyer_email,
-                'address' => [
-                    'line1' => $invoice->buyer_address_line1,
-                    'line2' => $invoice->buyer_address_line2,
-                    'line3' => $invoice->buyer_address_line3,
-                    'postalCode' => $invoice->buyer_postal_code,
-                    'city' => $invoice->buyer_city,
-                    'state' => $invoice->buyer_state,
-                    'country' => $invoice->buyer_country,
-                ],
-                'contactNumber' => $invoice->buyer_contact_number,
-            ],
-            'lineItems' => $lineItems,
-            'totals' => [
-                'excludingTax' => (float) $invoice->total_excluding_tax,
-                'taxAmount' => (float) $invoice->total_tax_amount,
-                'includingTax' => (float) $invoice->total_including_tax,
-                'discountValue' => (float) $invoice->total_discount_value,
-                'feeChargeAmount' => (float) $invoice->total_fee_charge_amount,
-                'payableAmount' => (float) $invoice->total_payable_amount,
-            ],
-            'currency' => [
-                'code' => $invoice->currency_code,
-                'exchangeRate' => $invoice->currency_exchange_rate ? (float) $invoice->currency_exchange_rate : null,
-            ],
+        $utcDateTime = clone $invoice->invoice_date_time;
+        $utcDateTime->setTimezone('UTC');
+
+        // Supplier Identifications structure
+        $supplierIdentifications = [
+            [ 'ID' => [['_' => $invoice->supplier_tin, 'schemeID' => 'TIN']] ],
+            [ 'ID' => [['_' => $invoice->supplier_registration_number, 'schemeID' => 'BRN']] ],
         ];
-        
-        // Add optional fields if present
-        if ($invoice->has_shipping_info) {
-            $payload['shipping'] = [
-                'recipientName' => $invoice->shipping_recipient_name,
-                'recipientTin' => $invoice->shipping_recipient_tin,
-                'address' => [
-                    'line1' => $invoice->shipping_address_line1,
-                    'line2' => $invoice->shipping_address_line2,
-                    'line3' => $invoice->shipping_address_line3,
-                    'postalCode' => $invoice->shipping_postal_code,
-                    'city' => $invoice->shipping_city,
-                    'state' => $invoice->shipping_state,
-                    'country' => $invoice->shipping_country,
+        if (!empty($invoice->supplier_sst_registration_number)) {
+            $supplierIdentifications[] = [ 'ID' => [['_' => $invoice->supplier_sst_registration_number, 'schemeID' => 'SST']] ];
+        } else {
+            $supplierIdentifications[] = [ 'ID' => [['_' => 'NA', 'schemeID' => 'SST']] ];
+        }
+        if (!empty($invoice->supplier_tourism_tax_number)) {
+            $supplierIdentifications[] = [ 'ID' => [['_' => $invoice->supplier_tourism_tax_number, 'schemeID' => 'TTX']] ];
+        } else {
+            $supplierIdentifications[] = [ 'ID' => [['_' => 'NA', 'schemeID' => 'TTX']] ];
+        }
+
+        // Buyer Identifications structure
+        $buyerIdentifications = [
+            [ 'ID' => [['_' => $invoice->buyer_tin, 'schemeID' => 'TIN']] ],
+            [ 'ID' => [['_' => $invoice->buyer_registration_number ?: 'NA', 'schemeID' => 'BRN']] ],
+        ];
+        if (!empty($invoice->buyer_sst_registration_number)) {
+            $buyerIdentifications[] = [ 'ID' => [['_' => $invoice->buyer_sst_registration_number, 'schemeID' => 'SST']] ];
+        } else {
+            $buyerIdentifications[] = [ 'ID' => [['_' => 'NA', 'schemeID' => 'SST']] ];
+        }
+        $buyerIdentifications[] = [ 'ID' => [['_' => 'NA', 'schemeID' => 'TTX']] ];
+
+        // Line Items UBL Mapping
+        $invoiceLines = [];
+        foreach ($invoice->lineItems as $item) {
+            $invoiceLines[] = [
+                'ID' => [['_' => (string) $item->line_number]],
+                'InvoicedQuantity' => [['_' => (float) $item->quantity, 'unitCode' => $item->unit_of_measure]],
+                'LineExtensionAmount' => [['_' => (float) $item->total_excluding_tax_per_line, 'currencyID' => $invoice->currency_code]],
+                'AllowanceCharge' => [
+                    [
+                        'ChargeIndicator' => [['_' => false]],
+                        'AllowanceChargeReason' => [['_' => 'Discount']],
+                        'Amount' => [['_' => (float) ($item->discount_amount ?? 0), 'currencyID' => $invoice->currency_code]]
+                    ],
+                    [
+                        'ChargeIndicator' => [['_' => true]],
+                        'AllowanceChargeReason' => [['_' => 'Charge']],
+                        'Amount' => [['_' => (float) ($item->charge_fee_amount ?? 0), 'currencyID' => $invoice->currency_code]]
+                    ]
                 ],
+                'TaxTotal' => [
+                    [
+                        'TaxAmount' => [['_' => (float) $item->tax_amount, 'currencyID' => $invoice->currency_code]],
+                        'TaxSubtotal' => [
+                            [
+                                'TaxableAmount' => [['_' => (float) $item->total_excluding_tax_per_line, 'currencyID' => $invoice->currency_code]],
+                                'TaxAmount' => [['_' => (float) $item->tax_amount, 'currencyID' => $invoice->currency_code]],
+                                'Percent' => [['_' => (float) $item->tax_rate]],
+                                'TaxCategory' => [
+                                    [
+                                        'ID' => [['_' => $item->tax_type]],
+                                        'TaxExemptionReason' => $item->tax_exemption_reason ? [['_' => $item->tax_exemption_reason]] : [],
+                                        'TaxScheme' => [
+                                            [
+                                                'ID' => [['_' => 'OTH', 'schemeID' => 'UN/ECE 5153', 'schemeAgencyID' => '6']]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                'Item' => [
+                    [
+                        'CommodityClassification' => [
+                            [
+                                'ItemClassificationCode' => [['_' => $item->product_tariff_code ?: 'NA', 'listID' => 'PTC']]
+                            ],
+                            [
+                                'ItemClassificationCode' => [['_' => $item->classification_code, 'listID' => 'CLASS']]
+                            ]
+                        ],
+                        'Description' => [['_' => $item->product_service_description]],
+                        'OriginCountry' => [
+                            [
+                                'IdentificationCode' => [['_' => $item->country_of_origin ?: 'MYS']]
+                            ]
+                        ]
+                    ]
+                ],
+                'Price' => [
+                    [
+                        'PriceAmount' => [['_' => (float) $item->unit_price, 'currencyID' => $invoice->currency_code]]
+                    ]
+                ],
+                'ItemPriceExtension' => [
+                    [
+                        'Amount' => [['_' => (float) $item->subtotal, 'currencyID' => $invoice->currency_code]]
+                    ]
+                ]
             ];
         }
-        
-        if ($invoice->has_customs_info) {
-            $payload['customs'] = [
-                'formReference' => $invoice->customs_form_reference,
-                'incoterms' => $invoice->incoterms,
-                'ftaInfo' => $invoice->free_trade_agreement_info,
+
+        // Tax totals mapping
+        $taxTotals = [
+            [
+                'TaxAmount' => [['_' => (float) $invoice->total_tax_amount, 'currencyID' => $invoice->currency_code]],
+                'TaxSubtotal' => [
+                    [
+                        'TaxableAmount' => [['_' => (float) $invoice->total_excluding_tax, 'currencyID' => $invoice->currency_code]],
+                        'TaxAmount' => [['_' => (float) $invoice->total_tax_amount, 'currencyID' => $invoice->currency_code]],
+                        'TaxCategory' => [
+                            [
+                                'ID' => [['_' => '01']], // Typical global indicator
+                                'TaxScheme' => [
+                                    [
+                                        'ID' => [['_' => 'OTH', 'schemeID' => 'UN/ECE 5153', 'schemeAgencyID' => '6']]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $ublPayload = [
+            '_D' => 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2',
+            '_A' => 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2',
+            '_B' => 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2',
+            'Invoice' => [
+                [
+                    'ID' => [['_' => $invoice->invoice_number]],
+                    'IssueDate' => [['_' => $utcDateTime->format('Y-m-d')]],
+                    'IssueTime' => [['_' => $utcDateTime->format('H:i:s\Z')]],
+                    'InvoiceTypeCode' => [['_' => $invoice->invoice_type, 'listVersionID' => '1.1']],
+                    'DocumentCurrencyCode' => [['_' => $invoice->currency_code]],
+                    'TaxCurrencyCode' => [['_' => $invoice->currency_code]],
+                    'AdditionalDocumentReference' => [
+                        [
+                            'ID' => [['_' => $invoice->customs_form_reference ?: 'NA']],
+                            'DocumentType' => [['_' => 'CustomsImportForm']]
+                        ]
+                    ],
+                    'AccountingSupplierParty' => [
+                        [
+                            'Party' => [
+                                [
+                                    'IndustryClassificationCode' => [['_' => $invoice->supplier_msic_code, 'name' => $invoice->supplier_business_activity_description]],
+                                    'PartyIdentification' => $supplierIdentifications,
+                                    'PostalAddress' => [
+                                        [
+                                            'CityName' => [['_' => $invoice->supplier_city ?: 'NA']],
+                                            'PostalZone' => [['_' => $invoice->supplier_postal_code ?: 'NA']],
+                                            'CountrySubentityCode' => [['_' => $invoice->supplier_state]],
+                                            'AddressLine' => [
+                                                ['Line' => [['_' => $invoice->supplier_address_line1]]],
+                                                ['Line' => [['_' => $invoice->supplier_address_line2 ?: 'NA']]],
+                                                ['Line' => [['_' => $invoice->supplier_address_line3 ?: 'NA']]]
+                                            ],
+                                            'Country' => [
+                                                [
+                                                    'IdentificationCode' => [['_' => $invoice->supplier_country, 'listID' => 'ISO3166-1', 'listAgencyID' => '6']]
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                    'PartyLegalEntity' => [
+                                        [
+                                            'RegistrationName' => [['_' => $invoice->supplier_name]]
+                                        ]
+                                    ],
+                                    'Contact' => [
+                                        [
+                                            'Telephone' => [['_' => $invoice->supplier_contact_number]],
+                                            'ElectronicMail' => [['_' => $invoice->supplier_email]]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'AccountingCustomerParty' => [
+                        [
+                            'Party' => [
+                                [
+                                    'PostalAddress' => [
+                                        [
+                                            'CityName' => [['_' => $invoice->buyer_city ?: 'NA']],
+                                            'PostalZone' => [['_' => $invoice->buyer_postal_code ?: 'NA']],
+                                            'CountrySubentityCode' => [['_' => $invoice->buyer_state]],
+                                            'AddressLine' => [
+                                                ['Line' => [['_' => $invoice->buyer_address_line1]]],
+                                                ['Line' => [['_' => $invoice->buyer_address_line2 ?: 'NA']]],
+                                                ['Line' => [['_' => $invoice->buyer_address_line3 ?: 'NA']]]
+                                            ],
+                                            'Country' => [
+                                                [
+                                                    'IdentificationCode' => [['_' => $invoice->buyer_country, 'listID' => 'ISO3166-1', 'listAgencyID' => '6']]
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                    'PartyLegalEntity' => [
+                                        [
+                                            'RegistrationName' => [['_' => $invoice->buyer_name]]
+                                        ]
+                                    ],
+                                    'PartyIdentification' => $buyerIdentifications,
+                                    'Contact' => [
+                                        [
+                                            'Telephone' => [['_' => $invoice->buyer_contact_number ?: 'NA']],
+                                            'ElectronicMail' => [['_' => $invoice->buyer_email ?: 'NA']]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'PaymentMeans' => [
+                        [
+                            'PaymentMeansCode' => [['_' => $invoice->payment_mode ?: '01']],
+                            'PayeeFinancialAccount' => [
+                                [
+                                    'ID' => [['_' => $invoice->bank_account_number ?: 'NA']]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'PaymentTerms' => [
+                        [
+                            'Note' => [['_' => $invoice->payment_terms ?: 'NA']]
+                        ]
+                    ],
+                    'AllowanceCharge' => [
+                        [
+                            'ChargeIndicator' => [['_' => false]],
+                            'AllowanceChargeReason' => [['_' => 'Overall Discount']],
+                            'Amount' => [['_' => (float) $invoice->total_discount_value, 'currencyID' => $invoice->currency_code]]
+                        ],
+                        [
+                            'ChargeIndicator' => [['_' => true]],
+                            'AllowanceChargeReason' => [['_' => 'Overall Charge']],
+                            'Amount' => [['_' => (float) $invoice->total_fee_charge_amount, 'currencyID' => $invoice->currency_code]]
+                        ]
+                    ],
+                    'TaxTotal' => $taxTotals,
+                    'LegalMonetaryTotal' => [
+                        [
+                            'LineExtensionAmount' => [['_' => (float) $invoice->total_excluding_tax, 'currencyID' => $invoice->currency_code]],
+                            'TaxExclusiveAmount' => [['_' => (float) $invoice->total_excluding_tax, 'currencyID' => $invoice->currency_code]],
+                            'TaxInclusiveAmount' => [['_' => (float) $invoice->total_including_tax, 'currencyID' => $invoice->currency_code]],
+                            'AllowanceTotalAmount' => [['_' => (float) $invoice->total_discount_value, 'currencyID' => $invoice->currency_code]],
+                            'ChargeTotalAmount' => [['_' => (float) $invoice->total_fee_charge_amount, 'currencyID' => $invoice->currency_code]],
+                            'PayableAmount' => [['_' => (float) $invoice->total_payable_amount, 'currencyID' => $invoice->currency_code]]
+                        ]
+                    ],
+                    'InvoiceLine' => $invoiceLines
+                ]
+            ]
+        ];
+
+        // Add Billing Reference for Note Types
+        if (in_array($invoice->invoice_type, ['02', '03', '04']) && $invoice->original_einvoice_reference) {
+            $ublPayload['Invoice'][0]['BillingReference'] = [
+                [
+                    'AdditionalDocumentReference' => [
+                        [
+                            'ID' => [['_' => $invoice->original_einvoice_reference]]
+                        ]
+                    ]
+                ]
             ];
         }
-        
-        return $payload;
+
+        // Add Delivery/Shipping info
+        if ($invoice->has_shipping_info) {
+            $ublPayload['Invoice'][0]['Delivery'] = [
+                [
+                    'DeliveryParty' => [
+                        [
+                            'PartyLegalEntity' => [
+                                [
+                                    'RegistrationName' => [['_' => $invoice->shipping_recipient_name]]
+                                ]
+                            ],
+                            'PostalAddress' => [
+                                [
+                                    'CityName' => [['_' => $invoice->shipping_city ?: 'NA']],
+                                    'PostalZone' => [['_' => $invoice->shipping_postal_code ?: 'NA']],
+                                    'CountrySubentityCode' => [['_' => $invoice->shipping_state ?: 'NA']],
+                                    'AddressLine' => [
+                                        ['Line' => [['_' => $invoice->shipping_address_line1]]],
+                                        ['Line' => [['_' => $invoice->shipping_address_line2 ?: 'NA']]],
+                                        ['Line' => [['_' => $invoice->shipping_address_line3 ?: 'NA']]]
+                                    ],
+                                    'Country' => [
+                                        [
+                                            'IdentificationCode' => [['_' => $invoice->shipping_country ?: 'MYS', 'listID' => 'ISO3166-1', 'listAgencyID' => '6']]
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            'PartyIdentification' => [
+                                [
+                                    'ID' => [['_' => $invoice->shipping_recipient_tin ?: 'EI00000000010', 'schemeID' => 'TIN']]
+                                ],
+                                [
+                                    'ID' => [['_' => $invoice->shipping_recipient_registration ?: 'NA', 'schemeID' => 'BRN']]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+        }
+
+        return $ublPayload;
     }
     
     /**

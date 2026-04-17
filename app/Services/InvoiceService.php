@@ -222,18 +222,17 @@ class InvoiceService
             default => 'INV',
         };
         
-        $date = now()->format('Ymd');
-        
-        $lastInvoice = Invoice::whereDate('created_at', now()->toDateString())
-            ->where('invoice_type', $invoiceType)
-            ->latest()
+        $lastInvoice = Invoice::where('invoice_type', $invoiceType)
+            ->where('invoice_number', 'like', $prefix . '-%')
+            ->orderBy('id', 'desc')
             ->first();
         
-        $sequence = $lastInvoice 
-            ? (intval(substr($lastInvoice->invoice_number, -6)) + 1) 
-            : 1;
+        $sequence = 1;
+        if ($lastInvoice && preg_match('/-(\d+)$/', $lastInvoice->invoice_number, $matches)) {
+            $sequence = intval($matches[1]) + 1;
+        }
         
-        return sprintf('%s-%s-%06d', $prefix, $date, $sequence);
+        return sprintf('%s-%06d', $prefix, $sequence);
     }
     
     /**

@@ -103,6 +103,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $query->where('user_type', 'B2C');
     }
 
+    public function scopeAdmin($query)
+    {
+        return $query->where('user_type', 'Admin');
+    }
+
     // ==================== ACCESSORS ====================
     
     public function getIsB2BAttribute(): bool
@@ -113,5 +118,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getIsActiveAttribute(): bool
     {
         return $this->status === 'active';
+    }
+
+    public function getIsAdminAttribute(): bool
+    {
+        return $this->user_type === 'Admin';
     }
 }

@@ -131,6 +131,58 @@ class BulkUploadService
     }
     
     /**
+     * Parse spreadsheet for frontend preview (In-Browser Approach)
+     */
+    public function parseForPreview(UploadedFile $file): array
+    {
+        $filePath = $file->getRealPath();
+        $spreadsheet = IOFactory::load($filePath);
+        $worksheet = $spreadsheet->getActiveSheet();
+        
+        // Return null for empty cells instead of empty string or skipping
+        $rows = $worksheet->toArray(null, true, true, false);
+        
+        if (empty($rows)) {
+            return [];
+        }
+        
+        $headers = array_shift($rows);
+        $parsedRows = [];
+        
+        foreach ($rows as $index => $row) {
+            $isEmpty = empty(array_filter($row, fn($val) => $val !== null && trim($val) !== ''));
+            if ($isEmpty) continue;
+            
+            // Normalize row length to match headers so array_combine doesn't fail
+            if (count($row) < count($headers)) {
+                $row = array_pad($row, count($headers), null);
+            } elseif (count($row) > count($headers)) {
+                $row = array_slice($row, 0, count($headers));
+            }
+            
+            try {
+                $invoiceData = $this->mapRowToInvoiceData($headers, $row);
+                
+                $parsedRows[] = [
+                    'id' => uniqid('row_'),
+                    'data' => $invoiceData,
+                    'is_valid' => true, // Real validation can be done client side or later
+                    'errors' => []
+                ];
+            } catch (\Exception $e) {
+                $parsedRows[] = [
+                    'id' => uniqid('row_'),
+                    'data' => array_combine($headers, $row),
+                    'is_valid' => false,
+                    'errors' => ['mapping' => $e->getMessage()]
+                ];
+            }
+        }
+        
+        return $parsedRows;
+    }
+    
+    /**
      * Map spreadsheet row to invoice data
      */
     protected function mapRowToInvoiceData(array $headers, array $row): array
