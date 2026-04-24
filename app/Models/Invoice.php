@@ -205,6 +205,31 @@ class Invoice extends Model
         return $query->where('invoice_type', '03');
     }
 
+    public function scopeRefundNotes($query)
+    {
+        return $query->where('invoice_type', '04');
+    }
+
+    public function scopeSelfBilledInvoice($query)
+    {
+        return $query->where('invoice_type', '11');
+    }
+
+    public function scopeSelfBilledCreditNote($query)
+    {
+        return $query->where('invoice_type', '12');
+    }
+
+    public function scopeSelfBilledDebitNote($query)
+    {
+        return $query->where('invoice_type', '13');
+    }
+
+    public function scopeSelfBilledRefundNote($query)
+    {
+        return $query->where('invoice_type', '14');
+    }
+
     public function scopeDateRange($query, $startDate, $endDate)
     {
         return $query->whereBetween('invoice_date_time', [$startDate, $endDate]);
