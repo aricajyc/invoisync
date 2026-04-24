@@ -89,7 +89,7 @@ class InvoiceController extends Controller
         }
 
         $invoices = $query->latest()
-            ->paginate(10)
+            ->paginate(20)
             ->withQueryString();
 
         $filters = $request->only([
@@ -259,12 +259,14 @@ class InvoiceController extends Controller
         $successful = 0;
         $failed = 0;
 
+        $bulkService = app(\App\Services\BulkUploadService::class);
         foreach ($invoices as $row) {
             try {
-                $invoiceService->createInvoice($row['data'], $request->user());
+                $nestedData = $bulkService->formatFlatToNested($row['data']);
+                $invoiceService->createInvoice($nestedData, $request->user());
                 $successful++;
             } catch (\Exception $e) {
-                // Ignore single row failure or log it
+                \Illuminate\Support\Facades\Log::error('Bulk commit row failed: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
                 $failed++;
             }
         }

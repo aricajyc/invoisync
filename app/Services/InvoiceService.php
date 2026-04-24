@@ -39,6 +39,47 @@ class InvoiceService
                 $data['currency_code'] = 'MYR';
             }
             
+            // Auto-fill supplier details from Business Profile if missing
+            $profile = $user->businessProfile;
+            if ($profile) {
+                // The BusinessProfile model properties
+                $data['supplier_name'] ??= $profile->business_name ?? 'NA';
+                $data['supplier_tin'] ??= $profile->tax_identification_number ?? 'EI00000000010';
+                
+                // Note: BusinessProfile may not have registration_type natively, defaulting to BRN for businesses
+                $data['supplier_registration_type'] ??= $profile->registration_type ?? 'BRN'; 
+                $data['supplier_registration_number'] ??= $profile->business_registration_number ?? 'NA';
+                
+                $data['supplier_sst_registration_number'] ??= $profile->sst_registration_number;
+                $data['supplier_email'] ??= $profile->contact_email ?? 'NA';
+                $data['supplier_msic_code'] ??= $profile->msic_code ?? '00000';
+                $data['supplier_business_activity_description'] ??= $profile->business_activity_description ?? 'NA';
+                
+                // Addresses
+                $data['supplier_address_line0'] ??= $profile->address_line_0 ?? 'NA';
+                $data['supplier_address_line1'] ??= $profile->address_line_1;
+                $data['supplier_address_line2'] ??= $profile->address_line_2;
+                
+                $data['supplier_postal_code'] ??= $profile->postal_zone;
+                $data['supplier_city'] ??= $profile->city;
+                $data['supplier_state'] ??= $profile->state ?? 'NA';
+                $data['supplier_country'] ??= $profile->country ?? 'MYS';
+                $data['supplier_contact_number'] ??= $profile->contact_phone ?? 'NA';
+            } else {
+                // If the user has no business profile at all, provide basic defaults
+                $data['supplier_name'] ??= 'NA';
+                $data['supplier_tin'] ??= 'EI00000000010';
+                $data['supplier_registration_type'] ??= 'NRIC';
+                $data['supplier_registration_number'] ??= 'NA';
+                $data['supplier_email'] ??= 'NA';
+                $data['supplier_msic_code'] ??= '00000';
+                $data['supplier_business_activity_description'] ??= 'NA';
+                $data['supplier_address_line0'] ??= 'NA';
+                $data['supplier_state'] ??= 'NA';
+                $data['supplier_country'] ??= 'MYS';
+                $data['supplier_contact_number'] ??= 'NA';
+            }
+            
             // Initialize totals
             $data['total_excluding_tax'] = 0;
             $data['total_including_tax'] = 0;

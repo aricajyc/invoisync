@@ -23,15 +23,16 @@ class Invoice extends Model
         // Supplier Details
         'supplier_name',
         'supplier_tin',
+        'supplier_registration_type',
         'supplier_registration_number',
         'supplier_sst_registration_number',
         'supplier_tourism_tax_number',
         'supplier_email',
         'supplier_msic_code',
         'supplier_business_activity_description',
+        'supplier_address_line0',
         'supplier_address_line1',
         'supplier_address_line2',
-        'supplier_address_line3',
         'supplier_postal_code',
         'supplier_city',
         'supplier_state',
@@ -41,12 +42,13 @@ class Invoice extends Model
         // Buyer Details
         'buyer_name',
         'buyer_tin',
+        'buyer_registration_type',
         'buyer_registration_number',
         'buyer_sst_registration_number',
         'buyer_email',
+        'buyer_address_line0',
         'buyer_address_line1',
         'buyer_address_line2',
-        'buyer_address_line3',
         'buyer_postal_code',
         'buyer_city',
         'buyer_state',
@@ -65,9 +67,9 @@ class Invoice extends Model
         'shipping_recipient_name',
         'shipping_recipient_tin',
         'shipping_recipient_registration',
+        'shipping_address_line0',
         'shipping_address_line1',
         'shipping_address_line2',
-        'shipping_address_line3',
         'shipping_postal_code',
         'shipping_city',
         'shipping_state',
@@ -239,9 +241,9 @@ class Invoice extends Model
     public function getSupplierFullAddressAttribute(): string
     {
         $parts = array_filter([
+            $this->supplier_address_line0,
             $this->supplier_address_line1,
             $this->supplier_address_line2,
-            $this->supplier_address_line3,
             $this->supplier_postal_code . ' ' . $this->supplier_city,
             $this->supplier_state,
             $this->supplier_country,
@@ -253,9 +255,9 @@ class Invoice extends Model
     public function getBuyerFullAddressAttribute(): string
     {
         $parts = array_filter([
+            $this->buyer_address_line0,
             $this->buyer_address_line1,
             $this->buyer_address_line2,
-            $this->buyer_address_line3,
             $this->buyer_postal_code . ' ' . $this->buyer_city,
             $this->buyer_state,
             $this->buyer_country,

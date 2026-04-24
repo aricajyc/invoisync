@@ -11,20 +11,78 @@ export default function BulkReview({ parsedData, filename }) {
         invoices: rows
     });
 
+    const validateRowJS = (rowData) => {
+        let errors = {};
+        
+        const requiredFields = [
+            'invoice_number', 'invoice_date_time', 'invoice_type', 'currency_code',
+            'total_excluding_tax', 'total_tax_amount', 'total_including_tax',
+            'buyer_name', 'buyer_tin', 'buyer_registration_type', 'buyer_registration_number', 'buyer_contact_number',
+            'item_classification_code', 'item_product_service_description',
+            'item_quantity', 'item_unit_price', 'item_tax_type', 'item_tax_rate'
+        ];
+        
+        requiredFields.forEach(field => {
+            let val = rowData[field];
+            if (val === null || val === undefined || String(val).trim() === '') {
+                errors[field] = 'The ' + field.replace(/_/g, ' ') + ' field is required.';
+            }
+        });
+
+        if (rowData.invoice_type && !['01','02','03','04','11','12','13','14'].includes(String(rowData.invoice_type))) {
+            errors.invoice_type = 'The selected invoice type is invalid.';
+        }
+        if (rowData.currency_code && rowData.currency_code !== 'MYR') {
+            errors.currency_code = 'The selected currency code is invalid.';
+        }
+        if (rowData.buyer_registration_type && !['BRN','NRIC','PASSPORT','ARMY'].includes(String(rowData.buyer_registration_type))) {
+            errors.buyer_registration_type = 'The selected buyer registration type is invalid.';
+        }
+        if (rowData.buyer_contact_number && !String(rowData.buyer_contact_number).startsWith('+60')) {
+            errors.buyer_contact_number = 'Contact number must start with +60';
+        }
+        
+        ['total_excluding_tax', 'total_tax_amount', 'total_including_tax', 'item_quantity', 'item_unit_price'].forEach(f => {
+            if (rowData[f] && isNaN(Number(rowData[f]))) {
+                errors[f] = 'Must be a number.';
+            }
+        });
+        
+        if (rowData.item_unit_price !== undefined && rowData.item_unit_price !== null && Number(rowData.item_unit_price) < 0) {
+            errors.item_unit_price = 'Unit price must be a positive value';
+        }
+        if (rowData.item_tax_rate !== undefined && rowData.item_tax_rate !== null && !['0','0.00','6','6.00','8','8.00'].includes(String(rowData.item_tax_rate))) {
+            errors.item_tax_rate = 'The selected item tax rate is invalid.';
+        }
+
+        const totalExc = Number(rowData.total_excluding_tax || 0);
+        const taxAmt = Number(rowData.total_tax_amount || 0);
+        const totalInc = Number(rowData.total_including_tax || 0);
+        
+        if (Math.abs((totalExc + taxAmt) - totalInc) > 0.01) {
+            errors.total_including_tax = 'Total must equal excluding tax + tax amount';
+        }
+
+        return errors;
+    };
+
     const handleCellChange = (rowIndex, field, value) => {
         const newRows = [...rows];
         
-        // Try parsing JSON if modifying an object
         let finalValue = value;
         try {
             if ((value.startsWith('[') && value.endsWith(']')) || (value.startsWith('{') && value.endsWith('}'))) {
                 finalValue = JSON.parse(value);
             }
-        } catch(e) { } // leave as string if it fails to parse
+        } catch(e) { }
 
         newRows[rowIndex].data[field] = finalValue;
-        newRows[rowIndex].is_valid = true; 
         
+        // Live UI validation
+        const liveErrors = validateRowJS(newRows[rowIndex].data);
+        newRows[rowIndex].errors = liveErrors;
+        newRows[rowIndex].is_valid = Object.keys(liveErrors).length === 0;
+
         setRows(newRows);
         setData('invoices', newRows);
     };
@@ -84,10 +142,10 @@ export default function BulkReview({ parsedData, filename }) {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                                         {rows.map((row, rIndex) => (
-                                            <tr key={row.id || rIndex} className={row.is_valid ? 'hover:bg-gray-50 dark:hover:bg-gray-700' : 'bg-red-50 dark:bg-red-900/20'}>
-                                                <td className="px-4 py-2 text-sm text-gray-500 border-r border-gray-200 dark:border-gray-700">
+                                            <tr key={row.id || rIndex} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                <td className="px-4 py-2 text-sm text-gray-500 border-r border-gray-200 dark:border-gray-700 dark:text-gray-300 truncate">
                                                     {rIndex + 1}
-                                                    {!row.is_valid && <span className="text-red-500 block text-xs">Error</span>}
+                                                    {!row.is_valid && <span className="text-red-600 block text-xs font-semibold mt-1">Error</span>}
                                                 </td>
                                                 {headers.map(header => {
                                                     // Handle array serialization (like line_items)
@@ -97,15 +155,20 @@ export default function BulkReview({ parsedData, filename }) {
                                                     }
                                                     
                                                     return (
-                                                    <td key={header} className="p-0 border-r border-gray-200 dark:border-gray-700 relative">
+                                                    <td key={header} className="p-0 border-r border-gray-200 dark:border-gray-700 relative group">
                                                         <input 
                                                             type="text"
                                                             value={cellValue}
                                                             onChange={(e) => handleCellChange(rIndex, header, e.target.value)}
-                                                            className={`w-full h-full p-2 border-0 focus:ring-2 focus:ring-inset focus:ring-indigo-500 text-sm dark:bg-gray-900 dark:text-gray-300 ${!row.is_valid && row.errors && row.errors[header] ? 'bg-red-100 dark:bg-red-800/40 text-red-900 dark:text-red-100' : 'bg-transparent'}`}
-                                                            title={row.errors?.[header] || ''}
+                                                            className={`w-full h-full p-2 border-0 focus:ring-2 focus:ring-inset focus:ring-indigo-500 text-sm shadow-none outline-none ${!row.is_valid && row.errors && row.errors[header] ? 'bg-red-100 dark:bg-red-900 text-red-900 dark:text-red-100 shadow-[inset_0_0_0_2px_#ef4444]' : 'bg-transparent dark:bg-gray-900 dark:text-gray-300'}`}
                                                             placeholder="-"
                                                         />
+                                                        {!row.is_valid && row.errors && row.errors[header] && (
+                                                            <div className="absolute hidden group-hover:block group-focus-within:block z-20 bottom-full left-0 mb-1 w-max max-w-xs p-2 text-xs text-white bg-red-600 rounded shadow-lg whitespace-normal break-words pointer-events-none">
+                                                                {row.errors[header]}
+                                                                <div className="absolute top-full left-4 -mt-px border-4 border-transparent border-t-red-600"></div>
+                                                            </div>
+                                                        )}
                                                     </td>
                                                 )})}
                                             </tr>

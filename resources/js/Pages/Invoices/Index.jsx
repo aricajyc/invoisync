@@ -25,10 +25,18 @@ export default function Index({ invoices, filters = {} }) {
                         fileInputRef.current.value = null;
                     }
                 },
-                onError: () => {
+                onError: (errors) => {
                     setIsUploading(false);
                     if (fileInputRef.current) {
                         fileInputRef.current.value = null;
+                    }
+                    if (errors.file) {
+                        alert(errors.file);
+                    } else if (errors.error) {
+                        alert(errors.error);
+                    } else {
+                        const errorMsg = Object.values(errors).join('\n');
+                        alert(errorMsg || "An error occurred during upload.");
                     }
                 },
             });

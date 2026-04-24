@@ -34,9 +34,9 @@ export default function Create({ businessProfile, invoice }) {
         supplier_business_activity_description: invoice?.supplier_business_activity_description || '',
         supplier_contact_number: invoice?.supplier_contact_number || '',
         // Supplier Address
+        supplier_address_line0: invoice?.supplier_address_line0 || '',
         supplier_address_line1: invoice?.supplier_address_line1 || '',
         supplier_address_line2: invoice?.supplier_address_line2 || '',
-        supplier_address_line3: invoice?.supplier_address_line3 || '',
         supplier_postal_code: invoice?.supplier_postal_code || '',
         supplier_city: invoice?.supplier_city || '',
         supplier_state: invoice?.supplier_state || '',
@@ -50,9 +50,9 @@ export default function Create({ businessProfile, invoice }) {
         buyer_email: invoice?.buyer_email || '',
         buyer_contact_number: invoice?.buyer_contact_number || '',
         // Buyer Address
+        buyer_address_line0: invoice?.buyer_address_line0 || '',
         buyer_address_line1: invoice?.buyer_address_line1 || '',
         buyer_address_line2: invoice?.buyer_address_line2 || '',
-        buyer_address_line3: invoice?.buyer_address_line3 || '',
         buyer_postal_code: invoice?.buyer_postal_code || '',
         buyer_city: invoice?.buyer_city || '',
         buyer_state: invoice?.buyer_state || '',
@@ -72,9 +72,9 @@ export default function Create({ businessProfile, invoice }) {
         shipping_recipient_name: invoice?.shipping_recipient_name || '',
         shipping_recipient_tin: invoice?.shipping_recipient_tin || '',
         shipping_recipient_registration: invoice?.shipping_recipient_registration || '',
+        shipping_address_line0: invoice?.shipping_address_line0 || '',
         shipping_address_line1: invoice?.shipping_address_line1 || '',
         shipping_address_line2: invoice?.shipping_address_line2 || '',
-        shipping_address_line3: invoice?.shipping_address_line3 || '',
         shipping_postal_code: invoice?.shipping_postal_code || '',
         shipping_city: invoice?.shipping_city || '',
         shipping_state: invoice?.shipping_state || '',
@@ -203,9 +203,9 @@ export default function Create({ businessProfile, invoice }) {
                 supplier_msic_code: businessProfile.msic_code || '',
                 supplier_business_activity_description: businessProfile.business_activity_description || '',
                 supplier_contact_number: businessProfile.contact_phone || '',
-                supplier_address_line1: businessProfile.address_line_0 || '',
-                supplier_address_line2: businessProfile.address_line_1 || '',
-                supplier_address_line3: businessProfile.address_line_2 || '',
+                supplier_address_line0: businessProfile.address_line_0 || '',
+                supplier_address_line1: businessProfile.address_line_1 || '',
+                supplier_address_line2: businessProfile.address_line_2 || '',
                 supplier_postal_code: businessProfile.postal_zone || '',
                 supplier_city: businessProfile.city || '',
                 supplier_state: businessProfile.state || '',
@@ -220,9 +220,9 @@ export default function Create({ businessProfile, invoice }) {
                 buyer_sst_registration_number: businessProfile.sst_registration_number || '',
                 buyer_email: businessProfile.contact_email || '',
                 buyer_contact_number: businessProfile.contact_phone || '',
-                buyer_address_line1: businessProfile.address_line_0 || '',
-                buyer_address_line2: businessProfile.address_line_1 || '',
-                buyer_address_line3: businessProfile.address_line_2 || '',
+                buyer_address_line0: businessProfile.address_line_0 || '',
+                buyer_address_line1: businessProfile.address_line_1 || '',
+                buyer_address_line2: businessProfile.address_line_2 || '',
                 buyer_postal_code: businessProfile.postal_zone || '',
                 buyer_city: businessProfile.city || '',
                 buyer_state: businessProfile.state || '',
@@ -534,9 +534,9 @@ export default function Create({ businessProfile, invoice }) {
                                     {/* Supplier Address Column */}
                                     <div className="space-y-4">
                                         <h4 className="font-semibold text-gray-700 dark:text-gray-300">Supplier Address</h4>
-                                        <div><InputLabel value="Line 1" /><TextInput className="w-full" value={data.supplier_address_line1} onChange={(e) => setData('supplier_address_line1', e.target.value)} /><InputError message={errors.supplier_address_line1} /></div>
+                                        <div><InputLabel value="Line 0" /><TextInput className="w-full" value={data.supplier_address_line0} onChange={(e) => setData('supplier_address_line0', e.target.value)} /><InputError message={errors.supplier_address_line0} /></div>
+                                        <div><InputLabel value="Line 1" /><TextInput className="w-full" value={data.supplier_address_line1} onChange={(e) => setData('supplier_address_line1', e.target.value)} /></div>
                                         <div><InputLabel value="Line 2" /><TextInput className="w-full" value={data.supplier_address_line2} onChange={(e) => setData('supplier_address_line2', e.target.value)} /></div>
-                                        <div><InputLabel value="Line 3" /><TextInput className="w-full" value={data.supplier_address_line3} onChange={(e) => setData('supplier_address_line3', e.target.value)} /></div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div><InputLabel value="Postcode" /><TextInput className="w-full" value={data.supplier_postal_code} onChange={(e) => setData('supplier_postal_code', e.target.value)} /></div>
                                             <div><InputLabel value="City" /><TextInput className="w-full" value={data.supplier_city} onChange={(e) => setData('supplier_city', e.target.value)} /></div>
@@ -570,9 +570,9 @@ export default function Create({ businessProfile, invoice }) {
                                     {/* Buyer Address Column */}
                                     <div className="space-y-4">
                                         <h4 className="font-semibold text-gray-700 dark:text-gray-300">Buyer Address</h4>
-                                        <div><InputLabel value="Line 1" /><TextInput className="w-full" value={data.buyer_address_line1} onChange={(e) => setData('buyer_address_line1', e.target.value)} /><InputError message={errors.buyer_address_line1} /></div>
+                                        <div><InputLabel value="Line 0" /><TextInput className="w-full" value={data.buyer_address_line0} onChange={(e) => setData('buyer_address_line0', e.target.value)} /><InputError message={errors.buyer_address_line0} /></div>
+                                        <div><InputLabel value="Line 1" /><TextInput className="w-full" value={data.buyer_address_line1} onChange={(e) => setData('buyer_address_line1', e.target.value)} /></div>
                                         <div><InputLabel value="Line 2" /><TextInput className="w-full" value={data.buyer_address_line2} onChange={(e) => setData('buyer_address_line2', e.target.value)} /></div>
-                                        <div><InputLabel value="Line 3" /><TextInput className="w-full" value={data.buyer_address_line3} onChange={(e) => setData('buyer_address_line3', e.target.value)} /></div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div><InputLabel value="Postcode" /><TextInput className="w-full" value={data.buyer_postal_code} onChange={(e) => setData('buyer_postal_code', e.target.value)} /></div>
                                             <div><InputLabel value="City" /><TextInput className="w-full" value={data.buyer_city} onChange={(e) => setData('buyer_city', e.target.value)} /></div>
@@ -705,8 +705,8 @@ export default function Create({ businessProfile, invoice }) {
                                         <TextInput className="mt-1 block w-full" value={data.shipping_recipient_name} onChange={(e) => setData('shipping_recipient_name', e.target.value)} />
                                     </div>
                                     <div className="md:col-span-2">
-                                        <InputLabel value="Shipping Address Line 1" />
-                                        <TextInput className="mt-1 block w-full" value={data.shipping_address_line1} onChange={(e) => setData('shipping_address_line1', e.target.value)} />
+                                        <InputLabel value="Shipping Address Line 0" />
+                                        <TextInput className="mt-1 block w-full" value={data.shipping_address_line0} onChange={(e) => setData('shipping_address_line0', e.target.value)} />
                                     </div>
                                     {/* Additional shipping fields can be added here if needed */}
                                 </div>
