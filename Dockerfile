@@ -3,6 +3,9 @@ FROM serversideup/php:8.2-fpm-nginx
 # Switch to root to install dependencies
 USER root
 
+# Install missing PHP extensions required by your Laravel packages
+RUN install-php-extensions gd zip bcmath
+
 # Install Node.js (required to compile React/Vite assets)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get update \
