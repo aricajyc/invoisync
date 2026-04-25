@@ -10,4 +10,4 @@ php artisan route:cache
 php artisan view:cache
 
 echo "Starting server..."
-exec /start.sh
+exec /init
