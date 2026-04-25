@@ -27,7 +27,4 @@ RUN npm install \
     && npm run build \
     && rm -rf node_modules
 
-# Cache Laravel configurations for maximum performance
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+# Remove config:cache from build step (Render injects ENV variables at runtime)
