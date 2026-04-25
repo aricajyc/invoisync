@@ -27,4 +27,8 @@ RUN npm install \
     && npm run build \
     && rm -rf node_modules
 
-# Remove config:cache from build step (Render injects ENV variables at runtime)
+# Copy and set up startup script
+COPY --chown=www-data:www-data start.sh /usr/local/bin/start-app.sh
+RUN chmod +x /usr/local/bin/start-app.sh
+
+CMD ["/usr/local/bin/start-app.sh"]
