@@ -11,10 +11,10 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # Switch back to the unprivileged webuser for security
-USER webuser
+USER www-data
 
 # Copy the entire Laravel application into the container
-COPY --chown=webuser:webgroup . /var/www/html/
+COPY --chown=www-data:www-data . /var/www/html/
 
 # Install PHP dependencies (Composer)
 RUN composer install --optimize-autoloader --no-dev --no-interaction
