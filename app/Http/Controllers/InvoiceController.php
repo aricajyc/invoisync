@@ -18,41 +18,38 @@ class InvoiceController extends Controller
     public function detectAnomaly(Request $request)
     {
         $validated = $request->validate([
-            'total_amount' => 'required|numeric',
-            'tax_amount' => 'required|numeric',
-            'line_items' => 'required|integer',
+            'invoiceCodeNumber' => 'nullable|string',
+            'invoiceDate' => 'required',
+            'invoiceTypeCode' => 'required|string',
+            'invoiceCurrencyCode' => 'required|string',
+            'totalExcludingTax' => 'required|numeric',
+            'totalTaxAmount' => 'required|numeric',
+            'totalIncludingTax' => 'required|numeric',
+            'unitPrice' => 'required|numeric',
+            'itemTotalExcludingTax' => 'required|numeric',
+            'itemSubtotal' => 'required|numeric',
+            'taxType' => 'required|string',
+            'buyerCountry' => 'required|string',
         ]);
 
-        $inputJson = json_encode($validated);
-        
-        // Escape the JSON string for command line argument safely
-        // In Windows/PowerShell, escaping quotes for JSON args can be tricky.
-        // Using symfony process directly handles arguments better usually, but here we construct the command.
-        // Let's use standard Process facade with array arguments which is safer.
-        
-        $scriptPath = base_path('ml_service/detect_anomaly.py');
-        
-        // Check if python or python3 is available
-        $pythonCommand = 'python'; // Default to python for Windows usually
-        
-        $result = Process::run([$pythonCommand, $scriptPath, $inputJson]);
-
-        if ($result->failed()) {
-             // Fallback to python3 if python failed (common in some envs) OR return error
-             // For now return error with output for debugging
-             return response()->json([
-                 'status' => 'error',
-                 'error' => 'ML Service failed: ' . $result->errorOutput() . ' ' . $result->output(),
-             ], 500);
-        }
-
         try {
-            $output = json_decode($result->output(), true);
-            return response()->json($output);
+            $apiKey = env('ML_API_KEY');
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'X-API-Key' => $apiKey
+            ])->post(env('ML_API_URL') . '/validate', $validated);
+
+            if ($response->failed()) {
+                 return response()->json([
+                     'status' => 'error',
+                     'error' => 'ML Service failed: ' . $response->body(),
+                 ], 500);
+            }
+
+            return response()->json($response->json());
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'error' => 'Failed to parse ML output',
+                'error' => 'Failed to connect to ML Service: ' . $e->getMessage(),
             ], 500);
         }
     }

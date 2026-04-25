@@ -334,15 +334,37 @@ export default function Create({ businessProfile, invoice }) {
         setAnalysisResult(null);
 
         try {
+            const itemCount = data.line_items.length;
+            const unitPriceAvg = itemCount > 0 
+                ? data.line_items.reduce((sum, item) => sum + parseFloat(item.unit_price || 0), 0) / itemCount 
+                : 0;
+            const avgTaxRate = itemCount > 0
+                ? data.line_items.reduce((sum, item) => sum + parseFloat(item.tax_rate || 0), 0) / itemCount
+                : 0;
+            const subtotal = data.total_excluding_tax;
+            const discountPercentage = subtotal > 0 
+                ? (parseFloat(data.total_discount_value || 0) / subtotal) * 100 
+                : 0;
+
             const res = await axios.post(route('invoices.detect-anomaly'), {
-                total_amount: data.total_including_tax,
-                tax_amount: data.total_tax_amount,
-                line_items: data.line_items.length
+                invoiceCodeNumber: data.invoice_number || 'DRAFT',
+                invoiceDate: data.invoice_date_time || new Date().toISOString().split('T')[0],
+                invoiceTypeCode: data.invoice_type || '01',
+                invoiceCurrencyCode: data.currency_code || 'MYR',
+                totalExcludingTax: subtotal,
+                totalTaxAmount: data.total_tax_amount,
+                totalIncludingTax: data.total_including_tax,
+                unitPrice: unitPriceAvg,
+                itemTotalExcludingTax: subtotal,
+                itemSubtotal: data.total_including_tax,
+                taxType: data.line_items.length > 0 ? (data.line_items[0].tax_type || '06') : '06',
+                buyerCountry: data.buyer_country || 'MYS'
             });
             setAnalysisResult(res.data);
         } catch (err) {
             console.error(err);
-            // alert("Failed to analyze invoice.");
+            const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message;
+            alert("Failed to analyze invoice:\n" + errorMsg);
         } finally {
             setAnalyzing(false);
         }
@@ -845,15 +867,9 @@ export default function Create({ businessProfile, invoice }) {
                                                     {analysisResult.is_anomaly ? '⚠️ Anomaly Detected' : '✅ Invoice Looks Normal'}
                                                 </h4>
                                                 <div className="mt-2 text-sm text-gray-700">
-                                                    <p><strong>Confidence:</strong> {(analysisResult.confidence * 100).toFixed(0)}%</p>
-                                                    <p><strong>Recommendation:</strong> {analysisResult.recommendation}</p>
-                                                    {analysisResult.reasons && analysisResult.reasons.length > 0 && (
-                                                        <ul className="mt-2 list-disc list-inside">
-                                                            {analysisResult.reasons.map((reason, idx) => (
-                                                                <li key={idx} className="text-red-600">{reason}</li>
-                                                            ))}
-                                                        </ul>
-                                                    )}
+                                                    <p><strong>Confidence:</strong> {Number(analysisResult.confidence).toFixed(0)}%</p>
+                                                    <p><strong>Risk Level:</strong> <span className="capitalize">{analysisResult.risk_level}</span></p>
+                                                    <p className="mt-1 text-gray-600"><em>{analysisResult.explanation}</em></p>
                                                 </div>
                                             </div>
                                         </div>
