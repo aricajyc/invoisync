@@ -1,34 +1,64 @@
-FROM serversideup/php:8.4-fpm-nginx
+FROM php:8.4-fpm-alpine
 
-# Switch to root to install dependencies
-USER root
+# Install system dependencies
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    nodejs \
+    npm \
+    curl \
+    zip \
+    unzip \
+    git \
+    libpng-dev \
+    libzip-dev \
+    oniguruma-dev \
+    openssl \
+    freetype-dev \
+    libjpeg-turbo-dev
 
-# Install missing PHP extensions required by your Laravel packages
-RUN install-php-extensions gd zip bcmath
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install \
+        pdo_mysql \
+        mbstring \
+        exif \
+        bcmath \
+        gd \
+        zip \
+        opcache
 
-# Install Node.js (required to compile React/Vite assets)
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get update \
-    && apt-get install -y nodejs \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Switch back to the unprivileged webuser for security
-USER www-data
+# Copy Nginx config
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 
-# Copy the entire Laravel application into the container
-COPY --chown=www-data:www-data . /var/www/html/
+# Copy Supervisor config
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Install PHP dependencies (Composer)
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy application files
+COPY . .
+
+# Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev --no-interaction
 
 # Install NPM dependencies and compile React assets
-RUN npm install \
-    && npm run build \
-    && rm -rf node_modules
+RUN npm install && npm run build && rm -rf node_modules
 
-# Copy and set up startup script
-COPY --chown=www-data:www-data start.sh /usr/local/bin/start-app.sh
-RUN chmod +x /usr/local/bin/start-app.sh
+# Set correct permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
 
-CMD ["/usr/local/bin/start-app.sh"]
+# Copy startup script
+COPY docker/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+EXPOSE 80
+
+CMD ["/usr/local/bin/start.sh"]
