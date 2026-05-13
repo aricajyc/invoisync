@@ -3,9 +3,12 @@ import { Head, useForm, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import axios from 'axios';
 
 export default function BulkReview({ parsedData, filename }) {
     const [rows, setRows] = useState(parsedData || []);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [analysisProgress, setAnalysisProgress] = useState(0);
     
     const { post, processing, data, setData } = useForm({
         invoices: rows
@@ -91,6 +94,72 @@ export default function BulkReview({ parsedData, filename }) {
         post(route('invoices.bulk-commit'));
     };
 
+    const analyzeAnomalies = async () => {
+        setAnalyzing(true);
+        setAnalysisProgress(0);
+        const newRows = [...rows];
+        
+        for (let i = 0; i < newRows.length; i++) {
+            const rowData = newRows[i].data;
+            try {
+                const subtotal = Number(rowData.total_excluding_tax || 0);
+                const taxAmount = Number(rowData.total_tax_amount || 0);
+                const totalIncluding = Number(rowData.total_including_tax || 0);
+                const unitPrice = Number(rowData.item_unit_price || 0);
+                
+                const payload = {
+                    invoiceCodeNumber: rowData.invoice_number || 'DRAFT',
+                    invoiceDate: rowData.invoice_date_time ? new Date(rowData.invoice_date_time).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                    invoiceTypeCode: String(rowData.invoice_type || '01'),
+                    invoiceCurrencyCode: rowData.currency_code || 'MYR',
+                    totalExcludingTax: subtotal,
+                    totalTaxAmount: taxAmount,
+                    totalIncludingTax: totalIncluding,
+                    unitPrice: unitPrice,
+                    itemTotalExcludingTax: subtotal,
+                    itemSubtotal: totalIncluding,
+                    taxType: String(rowData.item_tax_type || '06'),
+                    buyerCountry: rowData.buyer_country || 'MYS'
+                };
+                
+                const res = await axios.post(route('invoices.detect-anomaly'), payload);
+                let result = res.data;
+                
+                // Fallback heuristic if backend doesn't return anomalous_columns
+                if (result.is_anomaly && !result.anomalous_columns) {
+                    if (result.explanation && result.explanation.includes('Mathematical error')) {
+                        result.anomalous_columns = ['totalExcludingTax', 'totalTaxAmount', 'totalIncludingTax'];
+                    } else {
+                        result.anomalous_columns = ['totalIncludingTax', 'unitPrice'];
+                    }
+                }
+                
+                // Map the camelCase columns from ML API to snake_case used in frontend
+                if (result.anomalous_columns) {
+                    const camelToSnake = {
+                        'totalExcludingTax': 'total_excluding_tax',
+                        'totalTaxAmount': 'total_tax_amount',
+                        'totalIncludingTax': 'total_including_tax',
+                        'unitPrice': 'item_unit_price',
+                        'itemTotalExcludingTax': 'item_subtotal',
+                        'itemSubtotal': 'total_including_tax',
+                        'taxType': 'item_tax_type'
+                    };
+                    result.mapped_columns = result.anomalous_columns.map(c => camelToSnake[c] || c);
+                }
+                
+                newRows[i].analysisResult = result;
+            } catch (err) {
+                newRows[i].analysisResult = { error: err.response?.data?.error || err.response?.data?.message || err.message };
+            }
+            setAnalysisProgress(Math.round(((i + 1) / newRows.length) * 100));
+        }
+        
+        setRows(newRows);
+        setData('invoices', newRows);
+        setAnalyzing(false);
+    };
+
     if (rows.length === 0) {
         return (
             <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Bulk Upload Review</h2>}>
@@ -109,6 +178,9 @@ export default function BulkReview({ parsedData, filename }) {
                         Review Upload: {filename}
                     </h2>
                     <div className="flex gap-2">
+                        <SecondaryButton onClick={analyzeAnomalies} disabled={analyzing || rows.length === 0}>
+                            {analyzing ? `Scanning (${analysisProgress}%)` : '✨ Analyze with AI'}
+                        </SecondaryButton>
                         <Link href={route('invoices.index')}>
                             <SecondaryButton>Cancel</SecondaryButton>
                         </Link>
@@ -146,6 +218,17 @@ export default function BulkReview({ parsedData, filename }) {
                                                 <td className="px-4 py-2 text-sm text-gray-500 border-r border-gray-200 dark:border-gray-700 dark:text-gray-300 truncate">
                                                     {rIndex + 1}
                                                     {!row.is_valid && <span className="text-red-600 block text-xs font-semibold mt-1">Error</span>}
+                                                    {row.analysisResult && (
+                                                        row.analysisResult.error ? (
+                                                            <span className="text-red-500 block text-xs font-semibold mt-1" title={row.analysisResult.error}>ML Error</span>
+                                                        ) : row.analysisResult.is_anomaly ? (
+                                                            <span className="text-yellow-600 block text-xs font-semibold mt-1" title={`${row.analysisResult.explanation} (Confidence: ${Number(row.analysisResult.confidence).toFixed(0)}%)`}>
+                                                                ⚠️ Anomaly
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-green-600 block text-xs font-semibold mt-1" title="Looks normal">✅ Normal</span>
+                                                        )
+                                                    )}
                                                 </td>
                                                 {headers.map(header => {
                                                     // Handle array serialization (like line_items)
@@ -154,19 +237,39 @@ export default function BulkReview({ parsedData, filename }) {
                                                         cellValue = JSON.stringify(cellValue);
                                                     }
                                                     
+                                                    // Determine if this column has an anomaly
+                                                    const isAnomalyCol = row.analysisResult && row.analysisResult.is_anomaly && row.analysisResult.mapped_columns && row.analysisResult.mapped_columns.includes(header);
+                                                    const hasError = !row.is_valid && row.errors && row.errors[header];
+                                                    
+                                                    let inputClass = 'bg-transparent dark:bg-gray-900 dark:text-gray-300';
+                                                    if (hasError) {
+                                                        inputClass = 'bg-red-100 dark:bg-red-900 text-red-900 dark:text-red-100 shadow-[inset_0_0_0_2px_#ef4444]';
+                                                    } else if (isAnomalyCol) {
+                                                        inputClass = 'bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100 shadow-[inset_0_0_0_2px_#eab308]';
+                                                    }
+                                                    
+                                                    let errorMessage = null;
+                                                    let errorColor = 'bg-red-600 border-t-red-600';
+                                                    if (hasError) {
+                                                        errorMessage = row.errors[header];
+                                                    } else if (isAnomalyCol) {
+                                                        errorMessage = `AI Anomaly: ${row.analysisResult.explanation}`;
+                                                        errorColor = 'bg-yellow-600 border-t-yellow-600';
+                                                    }
+                                                    
                                                     return (
                                                     <td key={header} className="p-0 border-r border-gray-200 dark:border-gray-700 relative group">
                                                         <input 
                                                             type="text"
                                                             value={cellValue}
                                                             onChange={(e) => handleCellChange(rIndex, header, e.target.value)}
-                                                            className={`w-full h-full p-2 border-0 focus:ring-2 focus:ring-inset focus:ring-indigo-500 text-sm shadow-none outline-none ${!row.is_valid && row.errors && row.errors[header] ? 'bg-red-100 dark:bg-red-900 text-red-900 dark:text-red-100 shadow-[inset_0_0_0_2px_#ef4444]' : 'bg-transparent dark:bg-gray-900 dark:text-gray-300'}`}
+                                                            className={`w-full h-full p-2 border-0 focus:ring-2 focus:ring-inset focus:ring-indigo-500 text-sm shadow-none outline-none ${inputClass}`}
                                                             placeholder="-"
                                                         />
-                                                        {!row.is_valid && row.errors && row.errors[header] && (
-                                                            <div className="absolute hidden group-hover:block group-focus-within:block z-20 bottom-full left-0 mb-1 w-max max-w-xs p-2 text-xs text-white bg-red-600 rounded shadow-lg whitespace-normal break-words pointer-events-none">
-                                                                {row.errors[header]}
-                                                                <div className="absolute top-full left-4 -mt-px border-4 border-transparent border-t-red-600"></div>
+                                                        {errorMessage && (
+                                                            <div className={`absolute hidden group-hover:block group-focus-within:block z-20 bottom-full left-0 mb-1 w-max max-w-xs p-2 text-xs text-white ${errorColor.split(' ')[0]} rounded shadow-lg whitespace-normal break-words pointer-events-none`}>
+                                                                {errorMessage}
+                                                                <div className={`absolute top-full left-4 -mt-px border-4 border-transparent ${errorColor.split(' ')[1]}`}></div>
                                                             </div>
                                                         )}
                                                     </td>

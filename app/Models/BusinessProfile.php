@@ -27,6 +27,12 @@ class BusinessProfile extends Model
         'country',
         'contact_email',
         'contact_phone',
+        'myinvois_client_id',
+        'myinvois_client_secret',
+    ];
+
+    protected $casts = [
+        'myinvois_client_secret' => 'encrypted',
     ];
 
     // ==================== RELATIONSHIPS ====================

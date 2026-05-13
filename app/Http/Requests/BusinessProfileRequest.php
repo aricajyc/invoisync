@@ -51,6 +51,8 @@ class BusinessProfileRequest extends FormRequest
             'country' => ['required', 'string', 'size:3'], // MYS is 3 chars
             'contact_email' => ['required', 'email', 'max:150'],
             'contact_phone' => ['required', 'string', 'max:20'],
+            'myinvois_client_id' => ['nullable', 'string', 'max:255'],
+            'myinvois_client_secret' => ['nullable', 'string'],
         ];
     }
 

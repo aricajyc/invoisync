@@ -32,6 +32,8 @@ export default function UpdateBusinessProfileInformation({
         state: profile?.state || '',
         postal_zone: profile?.postal_zone || '',
         country: profile?.country || 'MYS',
+        myinvois_client_id: profile?.myinvois_client_id || '',
+        myinvois_client_secret: profile?.myinvois_client_secret || '',
     });
 
     const [countries, setCountries] = useState([]);
@@ -281,6 +283,37 @@ export default function UpdateBusinessProfileInformation({
                                 ))}
                             </select>
                             <InputError className="mt-2" message={errors.country} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* MyInvois Credentials */}
+                <div className="space-y-4 border-t pt-4">
+                    <h3 className="text-md font-medium text-gray-900 dark:text-gray-100">MyInvois Integration (LHDN)</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Enter your MyInvois ERP credentials to enable direct invoice submission.</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <InputLabel htmlFor="myinvois_client_id" value="Client ID" />
+                            <TextInput
+                                id="myinvois_client_id"
+                                className="mt-1 block w-full"
+                                value={data.myinvois_client_id}
+                                onChange={(e) => setData('myinvois_client_id', e.target.value)}
+                            />
+                            <InputError className="mt-2" message={errors.myinvois_client_id} />
+                        </div>
+                        <div>
+                            <InputLabel htmlFor="myinvois_client_secret" value="Client Secret" />
+                            <TextInput
+                                id="myinvois_client_secret"
+                                type="password"
+                                className="mt-1 block w-full"
+                                value={data.myinvois_client_secret}
+                                onChange={(e) => setData('myinvois_client_secret', e.target.value)}
+                            />
+                            <InputError className="mt-2" message={errors.myinvois_client_secret} />
+                            <p className="mt-1 text-xs text-gray-500">Your secret is encrypted before saving.</p>
                         </div>
                     </div>
                 </div>
