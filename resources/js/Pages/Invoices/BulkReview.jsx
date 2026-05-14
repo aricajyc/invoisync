@@ -11,7 +11,8 @@ export default function BulkReview({ parsedData, filename }) {
     const [analysisProgress, setAnalysisProgress] = useState(0);
     
     const { post, processing, data, setData } = useForm({
-        invoices: rows
+        invoices: rows,
+        filename: filename
     });
 
     const validateRowJS = (rowData) => {

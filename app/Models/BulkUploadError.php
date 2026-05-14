@@ -11,14 +11,17 @@ class BulkUploadError extends Model
 
     protected $fillable = [
         'batch_id',
-        'line_number',
-        'raw_data',
-        'error_code',
+        'row_number',
+        'field_name',
+        'error_type',
         'error_message',
+        'suggested_correction',
+        'severity',
+        'is_resolved',
     ];
 
     protected $casts = [
-        'raw_data' => 'array',
+        'is_resolved' => 'boolean',
     ];
 
     // ==================== RELATIONSHIPS ====================

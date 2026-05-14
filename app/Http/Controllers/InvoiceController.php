@@ -250,32 +250,73 @@ class InvoiceController extends Controller
         $request->validate([
             'invoices' => 'required|array',
             'invoices.*.data' => 'required|array',
+            'filename' => 'nullable|string',
         ]);
 
         $invoices = $request->input('invoices');
+        $filename = $request->input('filename', 'bulk_upload_' . date('Ymd_His') . '.csv');
+        $totalRecords = count($invoices);
+        
+        $batch = \App\Models\BulkUploadBatch::create([
+            'user_id' => $request->user()->id,
+            'batch_reference' => 'BATCH-' . strtoupper(\Illuminate\Support\Str::random(8)),
+            'original_filename' => $filename,
+            'file_path' => 'N/A', // Since we used cache, we don't have the permanent file path here
+            'total_records' => $totalRecords,
+            'processed_records' => 0,
+            'successful_records' => 0,
+            'failed_records' => 0,
+            'status' => 'processing',
+            'upload_date' => now(),
+            'processing_started_at' => now(),
+        ]);
+
         $successful = 0;
         $failed = 0;
 
         $bulkService = app(\App\Services\BulkUploadService::class);
-        foreach ($invoices as $row) {
+        foreach ($invoices as $index => $row) {
             try {
                 $nestedData = $bulkService->formatFlatToNested($row['data']);
+                // Assign batch id so invoice is linked to this batch
+                $nestedData['bulk_upload_batch_id'] = $batch->id;
+                
                 $invoiceService->createInvoice($nestedData, $request->user());
                 $successful++;
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Bulk commit row failed: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+                
+                // Record the error
+                \App\Models\BulkUploadError::create([
+                    'batch_id' => $batch->id,
+                    'row_number' => $index + 2, // Assuming row 1 is header
+                    'field_name' => 'general',
+                    'error_type' => 'processing_error',
+                    'error_message' => substr($e->getMessage(), 0, 500),
+                    'severity' => 'high',
+                ]);
+                
                 $failed++;
             }
+            
+            $batch->increment('processed_records');
         }
+
+        $batch->update([
+            'successful_records' => $successful,
+            'failed_records' => $failed,
+            'status' => $failed > 0 ? ($successful > 0 ? 'completed_with_errors' : 'failed') : 'completed',
+            'processing_completed_at' => now(),
+        ]);
 
         \App\Models\UserActivity::create([
             'user_id' => $request->user()->id,
             'action' => 'Bulk Commit',
-            'description' => "Committed bulk upload: {$successful} successful, {$failed} failed.",
+            'description' => "Committed bulk upload batch {$batch->batch_reference}: {$successful} successful, {$failed} failed.",
             'ip_address' => $request->ip(),
         ]);
 
         return redirect()->route('invoices.index')
-            ->with('status', "Bulk import complete. ({$successful} imported, {$failed} failed)");
+            ->with('status', "Bulk import complete. Batch Reference: {$batch->batch_reference}. ({$successful} imported, {$failed} failed)");
     }
 }
