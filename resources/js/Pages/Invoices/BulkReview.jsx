@@ -205,7 +205,7 @@ export default function BulkReview({ parsedData, filename }) {
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
                                         <tr>
-                                            <th className="px-4 py-3 text-left pl-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-16 bg-gray-50 dark:bg-gray-700">Row</th>
+                                            <th className="px-4 py-3 text-left pl-2 text-xs font-medium text-gray-500 uppercase tracking-wider w-16 bg-gray-50 dark:bg-gray-700 sticky left-0 z-20">Row</th>
                                             {headers.map(header => (
                                                 <th key={header} className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px] bg-gray-50 dark:bg-gray-700">
                                                     {header.replace(/_/g, ' ')}
@@ -215,8 +215,8 @@ export default function BulkReview({ parsedData, filename }) {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                                         {rows.map((row, rIndex) => (
-                                            <tr key={row.id || rIndex} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                <td className="px-4 py-2 text-sm text-gray-500 border-r border-gray-200 dark:border-gray-700 dark:text-gray-300 truncate">
+                                            <tr key={row.id || rIndex} className="hover:bg-gray-50 dark:hover:bg-gray-700 group">
+                                                <td className="px-4 py-2 text-sm text-gray-500 border-r border-gray-200 dark:border-gray-700 dark:text-gray-300 truncate sticky left-0 bg-white dark:bg-gray-800 z-10 group-hover:bg-gray-50 dark:group-hover:bg-gray-700">
                                                     {rIndex + 1}
                                                     {!row.is_valid && <span className="text-red-600 block text-xs font-semibold mt-1">Error</span>}
                                                     {row.analysisResult && (

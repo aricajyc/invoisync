@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
+import Pagination from '@/Components/Pagination';
 import { useState, useRef } from 'react';
 
 export default function Index({ invoices, filters = {} }) {
@@ -386,7 +387,10 @@ export default function Index({ invoices, filters = {} }) {
                                 </div>
                             )}
 
-                            {/* Pagination would go here */}
+                            {/* Pagination */}
+                            <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                                <Pagination links={invoices.links} />
+                            </div>
                         </div>
                     </div>
                 </div>

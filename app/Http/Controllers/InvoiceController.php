@@ -86,7 +86,7 @@ class InvoiceController extends Controller
         }
 
         $invoices = $query->latest()
-            ->paginate(20)
+            ->paginate(15)
             ->withQueryString();
 
         $filters = $request->only([
@@ -293,7 +293,7 @@ class InvoiceController extends Controller
                     'field_name' => 'general',
                     'error_type' => 'processing_error',
                     'error_message' => substr($e->getMessage(), 0, 500),
-                    'severity' => 'high',
+                    'severity' => 'critical',
                 ]);
                 
                 $failed++;
