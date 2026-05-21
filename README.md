@@ -16,10 +16,11 @@ Whether you are a small business transitioning to e-invoicing or a larger enterp
 - **LHDN Rejection Insights:** Analyzes and visualizes exactly *why* your invoices were rejected by LHDN (e.g., date-time errors, invalid TINs) so you can fix them quickly.
 - **Top Customers:** Tracks your top-performing clients by valid invoice volume.
 
-### 📁 **Smart Bulk Upload**
+### 📁 **Smart Bulk Upload & AI Anomaly Detection**
 - **Excel & CSV Support:** Easily upload hundreds of invoices at once.
 - **Intelligent Data Mapping:** Automatically maps your spreadsheet columns (Buyer Name, TIN, Line Items, Unit Price) to the correct LHDN schema.
 - **Pre-flight Validation:** Highlights exact rows and columns that have errors (e.g., missing TIN, invalid MSIC code) *before* you submit anything to LHDN.
+- **AI-Powered Anomaly Detection:** Utilizes a custom-trained Machine Learning model to detect unusual invoice patterns, duplicate entries, or suspicious pricing before submission.
 - **Bulk Submission:** Submit all your validated invoices to the LHDN portal with a single click.
 
 ### 🎨 **Modern & Responsive UI**
