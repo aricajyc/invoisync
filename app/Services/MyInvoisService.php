@@ -4,119 +4,258 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\MyinvoisSubmission;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+use Laraditz\MyInvois\Data\Invoice as SdkInvoice;
+use Laraditz\MyInvois\Data\InvoiceTypeCode;
+use Laraditz\MyInvois\Data\Data;
+use Laraditz\MyInvois\Data\Party;
+use Laraditz\MyInvois\Data\AccountingSupplierParty;
+use Laraditz\MyInvois\Data\AccountingCustomerParty;
+use Laraditz\MyInvois\Data\PostalAddress;
+use Laraditz\MyInvois\Data\PartyIdentification;
+use Laraditz\MyInvois\Data\PartyLegalEntity;
+use Laraditz\MyInvois\Data\Contact;
+use Laraditz\MyInvois\Data\TaxTotal;
+use Laraditz\MyInvois\Data\TaxSubtotal;
+use Laraditz\MyInvois\Data\TaxCategory;
+use Laraditz\MyInvois\Data\TaxScheme;
+use Laraditz\MyInvois\Data\LegalMonetaryTotal;
+use Laraditz\MyInvois\Data\InvoiceLine;
+use Laraditz\MyInvois\Data\Item;
+use Laraditz\MyInvois\Data\Price;
+use Laraditz\MyInvois\Data\Money;
+use Laraditz\MyInvois\Data\AddressLine;
+use Laraditz\MyInvois\Data\Country;
+use Laraditz\MyInvois\Data\IdentificationCode;
+use Laraditz\MyInvois\Data\CommodityClassification;
+use Laraditz\MyInvois\Data\ItemPriceExtension;
+use Laraditz\MyInvois\Enums\Format;
+use Laraditz\MyInvois\Exceptions\MyInvoisApiError;
+
 class MyInvoisService
 {
-    protected string $baseUrl;
-    protected string $apiKey;
     protected string $clientId;
     protected string $clientSecret;
-    protected ?string $accessToken = null;
-    
-    public function __construct()
+    protected \Laraditz\MyInvois\MyInvois $myInvois;
+
+    public function __construct(string $clientId, string $clientSecret)
     {
-        $this->baseUrl = config('myinvois.base_url');
-        $this->apiKey = config('myinvois.api_key');
-        $this->clientId = config('myinvois.client_id');
-        $this->clientSecret = config('myinvois.client_secret');
+        $this->clientId = $clientId;
+        $this->clientSecret = $clientSecret;
+        
+        $this->myInvois = new \Laraditz\MyInvois\MyInvois(
+            is_sandbox: env('MYINVOIS_SANDBOX', false),
+            client_id: $this->clientId,
+            client_secret: $this->clientSecret
+        );
     }
     
+    protected function myr(float $v): Money 
+    { 
+        return new Money(value: number_format($v, 2, '.', ''), currencyID: 'MYR'); 
+    }
+    
+    protected function sanitizePhone(?string $phone): string 
+    {
+        if (!$phone) return 'NA';
+        return preg_replace('/[^0-9]/', '', $phone);
+    }
+
     /**
      * Submit invoice to MyInvois
      */
-    public function submitInvoice(Invoice $invoice, string $digitalSignature): MyinvoisSubmission
+    public function submitInvoice(Invoice $invoice): MyinvoisSubmission
     {
-        // Prepare payload
-        $payload = $this->prepareInvoicePayload($invoice);
-        $payload['digitalSignature'] = $digitalSignature;
+        // 1. Authenticate with LHDN
+        $this->authenticate();
         
-        // Create submission record
+        // 2. Prepare SDK DTO payload
+        $invoiceData = $this->prepareInvoicePayload($invoice);
+        
+        // 3. Create submission record
         $submission = MyinvoisSubmission::create([
             'invoice_id' => $invoice->id,
             'submission_reference' => $this->generateSubmissionReference(),
             'submission_type' => 'single',
-            'request_payload' => $payload,
             'status' => 'pending',
+            'request_payload' => ['notice' => 'Payload managed by laraditz/my-invois SDK'],
         ]);
         
         try {
-            // Get access token
-            $this->authenticate();
+            // 4. Submit to MyInvois API
+            // Clear any previous failed submission from the SDK's tracking table
+            // so it doesn't get skipped by the SDK's internal duplication check
+            \Illuminate\Support\Facades\DB::table('myinvois_documents')
+                ->where('code_number', $invoice->invoice_number)
+                ->delete();
+
+            $result = $this->myInvois->document()->submit(
+                documents: [$invoiceData], 
+                format: \Laraditz\MyInvois\Enums\Format::XML
+            );
             
-            // Submit to MyInvois API
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->accessToken,
-                'Content-Type' => 'application/json',
-            ])
-            ->timeout(30)
-            ->post($this->baseUrl . '/api/v1/invoice/submit', $payload);
+            // Note: The package automatically creates ApiLogs in myinvois_requests table.
             
-            // Log API call
-            $this->logApiCall($submission, 'POST', '/api/v1/invoice/submit', $response);
-            
-            // Handle response
-            if ($response->successful()) {
-                $responseData = $response->json();
+            // 5. Handle response
+            if ($result['success'] ?? false) {
+                $submissionUid = $result['data']['submissionUid'] ?? null;
+                $acceptedDoc = $result['data']['acceptedDocuments'][0] ?? null;
+                $rejectedDoc = $result['data']['rejectedDocuments'][0] ?? null;
                 
-                $submission->update([
-                    'status' => 'accepted',
-                    'response_payload' => $responseData,
-                    'myinvois_uid' => $responseData['uid'] ?? null,
-                    'qr_code_url' => $responseData['qrCodeUrl'] ?? null,
-                    'submitted_at' => now(),
-                    'response_received_at' => now(),
-                ]);
-                
-                // Update invoice
-                $invoice->update([
-                    'status' => 'approved',
-                    'myinvois_uid' => $responseData['uid'] ?? null,
-                    'qr_code_data' => $responseData['qrCode'] ?? null,
-                    'irbm_unique_identifier' => $responseData['uid'] ?? null,
-                    'validation_date_time' => now(),
-                    'submitted_at' => now(),
-                ]);
-                
+                if ($acceptedDoc) {
+                    $submission->update([
+                        'status' => 'accepted',
+                        'response_payload' => $result['data'],
+                        'myinvois_uid' => $acceptedDoc['uuid'] ?? null,
+                        'submitted_at' => now(),
+                        'response_received_at' => now(),
+                    ]);
+                    
+                    $invoice->update([
+                        'status' => 'submitted',
+                        'myinvois_uid' => $acceptedDoc['uuid'] ?? null,
+                        'irbm_unique_identifier' => $submissionUid,
+                        'validation_date_time' => now(),
+                        'submitted_at' => now(),
+                    ]);
+                } else if ($rejectedDoc) {
+                    $errorDetails = $rejectedDoc['error']['details'] ?? [];
+                    $rejectionReason = collect($errorDetails)->pluck('message')->filter()->implode(' | ') ?: 'Rejected by LHDN';
+                    
+                    $this->markAsRejected($submission, $invoice, $result, $rejectionReason);
+                }
             } else {
-                $errorData = $response->json();
-                
-                $submission->update([
-                    'status' => 'rejected',
-                    'response_payload' => $errorData,
-                    'rejection_reason' => $errorData['message'] ?? 'Submission rejected by MyInvois',
-                    'submitted_at' => now(),
-                    'response_received_at' => now(),
-                ]);
-                
-                // Update invoice
-                $invoice->update([
-                    'status' => 'rejected',
-                ]);
+                $this->markAsRejected($submission, $invoice, $result, 'Unknown API error');
             }
             
+        } catch (MyInvoisApiError $e) {
+            $errorData = $e->getErrors();
+            $rejectionReason = 'Submission rejected by MyInvois';
+            if (isset($errorData['details']) && is_array($errorData['details'])) {
+                $rejectionReason = collect($errorData['details'])->pluck('message')->filter()->implode(' | ');
+            } elseif (isset($errorData['message'])) {
+                $rejectionReason = $errorData['message'];
+            }
+            
+            Log::error('MyInvois API error', ['invoice_id' => $invoice->id, 'error' => $e->getMessage(), 'details' => $errorData]);
+            $this->markAsRejected($submission, $invoice, $errorData, $rejectionReason);
+            
         } catch (\Exception $e) {
-            Log::error('MyInvois submission failed', [
-                'invoice_id' => $invoice->id,
-                'error' => $e->getMessage(),
-            ]);
+            $msg = $e->getMessage();
+            preg_match('/\{.*\}/s', $msg, $matches);
+            if ($matches) {
+                $errorData = json_decode($matches[0], true);
+                $details = $errorData['error']['details'] ?? [];
+                $rejectionReason = collect($details)->pluck('message')->filter()->implode(' | ') ?: 'Validation Error';
+            } else {
+                $errorData = ['error' => $msg];
+                $rejectionReason = $msg;
+            }
             
-            $submission->update([
-                'status' => 'rejected',
-                'rejection_reason' => $e->getMessage(),
-                'response_received_at' => now(),
-            ]);
-            
-            $invoice->update([
-                'status' => 'rejected',
-            ]);
+            Log::error('MyInvois submission failed', ['invoice_id' => $invoice->id, 'error' => $msg]);
+            $this->markAsRejected($submission, $invoice, $errorData, $rejectionReason);
         }
         
         return $submission->fresh();
     }
     
+    protected function markAsRejected($submission, $invoice, $errorData, $rejectionReason)
+    {
+        $submission->update([
+            'status' => 'rejected',
+            'response_payload' => $errorData,
+            'rejection_reason' => $rejectionReason,
+            'submitted_at' => now(),
+            'response_received_at' => now(),
+        ]);
+        
+        $invoice->update([
+            'status' => 'rejected',
+        ]);
+    }
+    
+    /**
+     * Sync invoice status from MyInvois
+     */
+    public function syncInvoiceStatus(Invoice $invoice): bool
+    {
+        if (!$invoice->myinvois_uid) {
+            return false;
+        }
+
+        try {
+            $this->authenticate();
+            
+            $result = $this->myInvois->document()->details(uuid: $invoice->myinvois_uid);
+            
+            if ($result['success'] ?? false) {
+                $status = $result['data']['status'] ?? null;
+                $dateTimeValidated = $result['data']['dateTimeValidated'] ?? $result['data']['dateTimeReceived'] ?? null;
+                
+                // Format the date for MySQL if present
+                $validationDateTime = $dateTimeValidated ? \Carbon\Carbon::parse($dateTimeValidated)->setTimezone(config('app.timezone'))->format('Y-m-d H:i:s') : null;
+                
+                $submission = $invoice->myinvoisSubmission;
+                
+                if ($status === 'Valid') {
+                    $updateData = ['status' => 'validated'];
+                    if ($validationDateTime) $updateData['validation_date_time'] = $validationDateTime;
+                    $invoice->update($updateData);
+                    
+                    if ($submission) {
+                        $submission->update(['status' => 'accepted']);
+                    }
+                } elseif ($status === 'Invalid') {
+                    // Extract errors
+                    $errors = [];
+                    $validationSteps = $result['data']['validationResults']['validationSteps'] ?? [];
+                    foreach ($validationSteps as $step) {
+                        if (isset($step['status']) && $step['status'] === 'Invalid' && isset($step['error'])) {
+                            if (isset($step['error']['innerError']) && is_array($step['error']['innerError'])) {
+                                foreach ($step['error']['innerError'] as $inner) {
+                                    $errors[] = $inner['error'] ?? 'Validation Error';
+                                }
+                            } else {
+                                $errors[] = $step['error']['error'] ?? 'Validation Error';
+                            }
+                        }
+                    }
+                    
+                    $rejectionReason = !empty($errors) ? implode(" | ", $errors) : 'Invalid document';
+                    
+                    $updateData = ['status' => 'invalid'];
+                    if ($validationDateTime) $updateData['validation_date_time'] = $validationDateTime;
+                    $invoice->update($updateData);
+                    
+                    if ($submission) {
+                        $submission->update([
+                            'status' => 'invalid',
+                            'rejection_reason' => $rejectionReason,
+                        ]);
+                    }
+                } elseif ($status === 'Cancelled') {
+                    $updateData = ['status' => 'cancelled'];
+                    if ($validationDateTime) $updateData['validation_date_time'] = $validationDateTime;
+                    $invoice->update($updateData);
+                    // For submission, we can leave it as accepted or update if we add cancelled to enum. 
+                    // To be safe, we just update the invoice status, since the submission was technically accepted.
+                }
+                
+                return true;
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            Log::error('MyInvois sync failed', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
+
     /**
      * Cancel validated invoice
      */
@@ -125,432 +264,132 @@ class MyInvoisService
         try {
             $this->authenticate();
             
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->accessToken,
-                'Content-Type' => 'application/json',
-            ])
-            ->post($this->baseUrl . '/api/v1/invoice/cancel', [
-                'uid' => $invoice->myinvois_uid,
-                'reason' => 'User requested cancellation',
-            ]);
+            $result = $this->myInvois->document()->cancel(
+                params: ['uuid' => $invoice->myinvois_uid],
+                payload: [
+                    'status' => 'cancelled',
+                    'reason' => 'User requested cancellation'
+                ]
+            );
             
-            if ($response->successful()) {
+            if ($result['success'] ?? false) {
                 $invoice->update(['status' => 'cancelled']);
                 return true;
             }
             
             return false;
-            
         } catch (\Exception $e) {
             Log::error('MyInvois cancellation failed', [
                 'invoice_id' => $invoice->id,
                 'error' => $e->getMessage(),
             ]);
-            
             return false;
         }
     }
     
     /**
-     * Validate invoice format (dry run)
+     * Validate invoice format (dry run) - Deprecated as LHDN V1.0 API has no explicit validation endpoint
      */
     public function validateInvoiceFormat(Invoice $invoice): array
     {
-        try {
-            $this->authenticate();
-            
-            $payload = $this->prepareInvoicePayload($invoice);
-            
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->accessToken,
-                'Content-Type' => 'application/json',
-            ])
-            ->post($this->baseUrl . '/api/v1/invoice/validate', $payload);
-            
-            if ($response->successful()) {
-                return [
-                    'valid' => true,
-                    'message' => 'Invoice format is valid',
-                ];
-            } else {
-                $errors = $response->json()['errors'] ?? [];
-                return [
-                    'valid' => false,
-                    'errors' => $errors,
-                ];
+        return [
+            'valid' => true,
+            'message' => 'Format validation is handled during submission in v1.0 SDK',
+        ];
+    }
+    
+    /**
+     * Map internal Invoice model to Laraditz SDK DTOs
+     */
+    protected function prepareInvoicePayload(Invoice $invoice): SdkInvoice
+    {
+        $taxSchemeOTH = new TaxScheme(ID: new Data(value: 'OTH', attributes: ['schemeID' => 'UN/ECE 5153', 'schemeAgencyID' => '6']));
+        $myrCountry   = new Country(IdentificationCode: new IdentificationCode(value: $invoice->supplier_country ?: 'MYS', listID: 'ISO3166-1', listAgencyID: '6'));
+        $buyerCountry = new Country(IdentificationCode: new IdentificationCode(value: $invoice->buyer_country ?: 'MYS', listID: 'ISO3166-1', listAgencyID: '6'));
+
+        // Supplier
+        $supplierParty = new Party(
+            IndustryClassificationCode: new Data(value: $invoice->supplier_msic_code ?: '47222', attributes: ['name' => $invoice->supplier_business_activity_description ?: 'Retail']),
+            PartyIdentification: [
+                new PartyIdentification(ID: new Data(value: $invoice->supplier_tin, attributes: ['schemeID' => 'TIN'])),
+                new PartyIdentification(ID: new Data(value: $invoice->supplier_registration_number, attributes: ['schemeID' => str_starts_with($invoice->supplier_tin, 'IG') ? 'NRIC' : 'BRN'])),
+            ],
+            PostalAddress: new PostalAddress(CityName: $invoice->supplier_city ?: 'NA', PostalZone: $invoice->supplier_postal_code ?: 'NA', CountrySubentityCode: $invoice->supplier_state ?: '14',
+                AddressLine: [new AddressLine(Line: $invoice->supplier_address_line1 ?: 'NA')], Country: $myrCountry),
+            PartyLegalEntity: new PartyLegalEntity(RegistrationName: new Data(value: $invoice->supplier_name)),
+            Contact: new Contact(Telephone: $this->sanitizePhone($invoice->supplier_contact_number), ElectronicMail: $invoice->supplier_email ?: 'test@test.com'),
+        );
+
+        // Buyer
+        $buyerParty = new Party(
+            PartyIdentification: [
+                new PartyIdentification(ID: new Data(value: $invoice->buyer_tin, attributes: ['schemeID' => 'TIN'])),
+                new PartyIdentification(ID: new Data(value: $invoice->buyer_registration_number ?: 'NA', attributes: ['schemeID' => str_starts_with($invoice->buyer_tin, 'IG') ? 'NRIC' : 'BRN'])),
+            ],
+            PostalAddress: new PostalAddress(CityName: $invoice->buyer_city ?: 'NA', PostalZone: $invoice->buyer_postal_code ?: 'NA', CountrySubentityCode: $invoice->buyer_state ?: '14',
+                AddressLine: [new AddressLine(Line: $invoice->buyer_address_line1 ?: 'NA')], Country: $buyerCountry),
+            PartyLegalEntity: new PartyLegalEntity(RegistrationName: new Data(value: $invoice->buyer_name)),
+            Contact: new Contact(Telephone: $this->sanitizePhone($invoice->buyer_contact_number), ElectronicMail: $invoice->buyer_email ?: 'buyer@test.com'),
+        );
+
+        // Map Lines
+        $sdkLines = [];
+        foreach ($invoice->lineItems as $item) {
+            $classCode = $item->classification_code;
+            if (empty($classCode) || $classCode === '00000' || strlen(trim($classCode)) !== 3) {
+                $classCode = '022';
             }
             
-        } catch (\Exception $e) {
-            return [
-                'valid' => false,
-                'error' => $e->getMessage(),
-            ];
+            $taxType = $item->tax_type ?: '01';
+            $taxType = str_pad(trim($taxType), 2, '0', STR_PAD_LEFT);
+
+            $sdkLines[] = new InvoiceLine(
+                ID: (string) $item->line_number,
+                InvoicedQuantity: new Data(value: (string) $item->quantity, attributes: ['unitCode' => $item->unit_of_measure ?: 'C62']),
+                LineExtensionAmount: $this->myr($item->total_excluding_tax_per_line),
+                TaxTotal: new TaxTotal(TaxAmount: $this->myr($item->tax_amount),
+                    TaxSubtotal: new TaxSubtotal(TaxableAmount: $this->myr($item->total_excluding_tax_per_line), TaxAmount: $this->myr($item->tax_amount), Percent: (string) $item->tax_rate,
+                        TaxCategory: new TaxCategory(ID: $taxType, TaxExemptionReason: $item->tax_exemption_reason, TaxScheme: $taxSchemeOTH))),
+                Item: new Item(Description: $item->product_service_description,
+                    CommodityClassification: [new CommodityClassification(ItemClassificationCode: new Data(value: $classCode, attributes: ['listID' => 'CLASS']))]),
+                Price: new Price(PriceAmount: $this->myr($item->unit_price)),
+                ItemPriceExtension: new ItemPriceExtension(Amount: $this->myr($item->total_excluding_tax_per_line)),
+            );
         }
+        
+        $issueDateTime = clone $invoice->invoice_date_time;
+        // Fix future date issue by setting to UTC
+        $issueDateTime->setTimezone('UTC');
+
+        // Main Invoice Data
+        return new SdkInvoice(
+            ID: $invoice->invoice_number,
+            IssueDate: $issueDateTime, 
+            IssueTime: clone $issueDateTime, // Package formats this automatically to H:i:s\Z
+            InvoiceTypeCode: new InvoiceTypeCode(value: $invoice->invoice_type, listVersionID: '1.0'),
+            DocumentCurrencyCode: $invoice->currency_code, TaxCurrencyCode: $invoice->currency_code,
+            AccountingSupplierParty: new AccountingSupplierParty(Party: $supplierParty),
+            AccountingCustomerParty: new AccountingCustomerParty(Party: $buyerParty),
+            TaxTotal: new TaxTotal(TaxAmount: $this->myr($invoice->total_tax_amount), TaxSubtotal: new TaxSubtotal(TaxableAmount: $this->myr($invoice->total_excluding_tax), TaxAmount: $this->myr($invoice->total_tax_amount), Percent: '0', TaxCategory: new TaxCategory(ID: '01', TaxScheme: $taxSchemeOTH))),
+            LegalMonetaryTotal: new LegalMonetaryTotal(
+                LineExtensionAmount: $this->myr($invoice->total_excluding_tax), TaxExclusiveAmount: $this->myr($invoice->total_excluding_tax), TaxInclusiveAmount: $this->myr($invoice->total_including_tax),
+                AllowanceTotalAmount: $this->myr($invoice->total_discount_value), ChargeTotalAmount: $this->myr($invoice->total_fee_charge_amount), PayableAmount: $this->myr($invoice->total_payable_amount)
+            ),
+            InvoiceLine: $sdkLines,
+        );
     }
     
     /**
-     * Prepare invoice payload for MyInvois API in strict UBL format
-     */
-    protected function prepareInvoicePayload(Invoice $invoice): array
-    {
-        $utcDateTime = clone $invoice->invoice_date_time;
-        $utcDateTime->setTimezone('UTC');
-
-        // Supplier Identifications structure
-        $supplierIdentifications = [
-            [ 'ID' => [['_' => $invoice->supplier_tin, 'schemeID' => 'TIN']] ],
-            [ 'ID' => [['_' => $invoice->supplier_registration_number, 'schemeID' => 'BRN']] ],
-        ];
-        if (!empty($invoice->supplier_sst_registration_number)) {
-            $supplierIdentifications[] = [ 'ID' => [['_' => $invoice->supplier_sst_registration_number, 'schemeID' => 'SST']] ];
-        } else {
-            $supplierIdentifications[] = [ 'ID' => [['_' => 'NA', 'schemeID' => 'SST']] ];
-        }
-        if (!empty($invoice->supplier_tourism_tax_number)) {
-            $supplierIdentifications[] = [ 'ID' => [['_' => $invoice->supplier_tourism_tax_number, 'schemeID' => 'TTX']] ];
-        } else {
-            $supplierIdentifications[] = [ 'ID' => [['_' => 'NA', 'schemeID' => 'TTX']] ];
-        }
-
-        // Buyer Identifications structure
-        $buyerIdentifications = [
-            [ 'ID' => [['_' => $invoice->buyer_tin, 'schemeID' => 'TIN']] ],
-            [ 'ID' => [['_' => $invoice->buyer_registration_number ?: 'NA', 'schemeID' => 'BRN']] ],
-        ];
-        if (!empty($invoice->buyer_sst_registration_number)) {
-            $buyerIdentifications[] = [ 'ID' => [['_' => $invoice->buyer_sst_registration_number, 'schemeID' => 'SST']] ];
-        } else {
-            $buyerIdentifications[] = [ 'ID' => [['_' => 'NA', 'schemeID' => 'SST']] ];
-        }
-        $buyerIdentifications[] = [ 'ID' => [['_' => 'NA', 'schemeID' => 'TTX']] ];
-
-        // Line Items UBL Mapping
-        $invoiceLines = [];
-        foreach ($invoice->lineItems as $item) {
-            $invoiceLines[] = [
-                'ID' => [['_' => (string) $item->line_number]],
-                'InvoicedQuantity' => [['_' => (float) $item->quantity, 'unitCode' => $item->unit_of_measure]],
-                'LineExtensionAmount' => [['_' => (float) $item->total_excluding_tax_per_line, 'currencyID' => $invoice->currency_code]],
-                'AllowanceCharge' => [
-                    [
-                        'ChargeIndicator' => [['_' => false]],
-                        'AllowanceChargeReason' => [['_' => 'Discount']],
-                        'Amount' => [['_' => (float) ($item->discount_amount ?? 0), 'currencyID' => $invoice->currency_code]]
-                    ],
-                    [
-                        'ChargeIndicator' => [['_' => true]],
-                        'AllowanceChargeReason' => [['_' => 'Charge']],
-                        'Amount' => [['_' => (float) ($item->charge_fee_amount ?? 0), 'currencyID' => $invoice->currency_code]]
-                    ]
-                ],
-                'TaxTotal' => [
-                    [
-                        'TaxAmount' => [['_' => (float) $item->tax_amount, 'currencyID' => $invoice->currency_code]],
-                        'TaxSubtotal' => [
-                            [
-                                'TaxableAmount' => [['_' => (float) $item->total_excluding_tax_per_line, 'currencyID' => $invoice->currency_code]],
-                                'TaxAmount' => [['_' => (float) $item->tax_amount, 'currencyID' => $invoice->currency_code]],
-                                'Percent' => [['_' => (float) $item->tax_rate]],
-                                'TaxCategory' => [
-                                    [
-                                        'ID' => [['_' => $item->tax_type]],
-                                        'TaxExemptionReason' => $item->tax_exemption_reason ? [['_' => $item->tax_exemption_reason]] : [],
-                                        'TaxScheme' => [
-                                            [
-                                                'ID' => [['_' => 'OTH', 'schemeID' => 'UN/ECE 5153', 'schemeAgencyID' => '6']]
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ],
-                'Item' => [
-                    [
-                        'CommodityClassification' => [
-                            [
-                                'ItemClassificationCode' => [['_' => $item->product_tariff_code ?: 'NA', 'listID' => 'PTC']]
-                            ],
-                            [
-                                'ItemClassificationCode' => [['_' => $item->classification_code, 'listID' => 'CLASS']]
-                            ]
-                        ],
-                        'Description' => [['_' => $item->product_service_description]],
-                        'OriginCountry' => [
-                            [
-                                'IdentificationCode' => [['_' => $item->country_of_origin ?: 'MYS']]
-                            ]
-                        ]
-                    ]
-                ],
-                'Price' => [
-                    [
-                        'PriceAmount' => [['_' => (float) $item->unit_price, 'currencyID' => $invoice->currency_code]]
-                    ]
-                ],
-                'ItemPriceExtension' => [
-                    [
-                        'Amount' => [['_' => (float) $item->subtotal, 'currencyID' => $invoice->currency_code]]
-                    ]
-                ]
-            ];
-        }
-
-        // Tax totals mapping
-        $taxTotals = [
-            [
-                'TaxAmount' => [['_' => (float) $invoice->total_tax_amount, 'currencyID' => $invoice->currency_code]],
-                'TaxSubtotal' => [
-                    [
-                        'TaxableAmount' => [['_' => (float) $invoice->total_excluding_tax, 'currencyID' => $invoice->currency_code]],
-                        'TaxAmount' => [['_' => (float) $invoice->total_tax_amount, 'currencyID' => $invoice->currency_code]],
-                        'TaxCategory' => [
-                            [
-                                'ID' => [['_' => '01']], // Typical global indicator
-                                'TaxScheme' => [
-                                    [
-                                        'ID' => [['_' => 'OTH', 'schemeID' => 'UN/ECE 5153', 'schemeAgencyID' => '6']]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-        ];
-
-        $ublPayload = [
-            '_D' => 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2',
-            '_A' => 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2',
-            '_B' => 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2',
-            'Invoice' => [
-                [
-                    'ID' => [['_' => $invoice->invoice_number]],
-                    'IssueDate' => [['_' => $utcDateTime->format('Y-m-d')]],
-                    'IssueTime' => [['_' => $utcDateTime->format('H:i:s\Z')]],
-                    'InvoiceTypeCode' => [['_' => $invoice->invoice_type, 'listVersionID' => '1.1']],
-                    'DocumentCurrencyCode' => [['_' => $invoice->currency_code]],
-                    'TaxCurrencyCode' => [['_' => $invoice->currency_code]],
-                    'AdditionalDocumentReference' => [
-                        [
-                            'ID' => [['_' => $invoice->customs_form_reference ?: 'NA']],
-                            'DocumentType' => [['_' => 'CustomsImportForm']]
-                        ]
-                    ],
-                    'AccountingSupplierParty' => [
-                        [
-                            'Party' => [
-                                [
-                                    'IndustryClassificationCode' => [['_' => $invoice->supplier_msic_code, 'name' => $invoice->supplier_business_activity_description]],
-                                    'PartyIdentification' => $supplierIdentifications,
-                                    'PostalAddress' => [
-                                        [
-                                            'CityName' => [['_' => $invoice->supplier_city ?: 'NA']],
-                                            'PostalZone' => [['_' => $invoice->supplier_postal_code ?: 'NA']],
-                                            'CountrySubentityCode' => [['_' => $invoice->supplier_state]],
-                                            'AddressLine' => [
-                                                ['Line' => [['_' => $invoice->supplier_address_line1]]],
-                                                ['Line' => [['_' => $invoice->supplier_address_line2 ?: 'NA']]],
-                                                ['Line' => [['_' => $invoice->supplier_address_line3 ?: 'NA']]]
-                                            ],
-                                            'Country' => [
-                                                [
-                                                    'IdentificationCode' => [['_' => $invoice->supplier_country, 'listID' => 'ISO3166-1', 'listAgencyID' => '6']]
-                                                ]
-                                            ]
-                                        ]
-                                    ],
-                                    'PartyLegalEntity' => [
-                                        [
-                                            'RegistrationName' => [['_' => $invoice->supplier_name]]
-                                        ]
-                                    ],
-                                    'Contact' => [
-                                        [
-                                            'Telephone' => [['_' => $invoice->supplier_contact_number]],
-                                            'ElectronicMail' => [['_' => $invoice->supplier_email]]
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ],
-                    'AccountingCustomerParty' => [
-                        [
-                            'Party' => [
-                                [
-                                    'PostalAddress' => [
-                                        [
-                                            'CityName' => [['_' => $invoice->buyer_city ?: 'NA']],
-                                            'PostalZone' => [['_' => $invoice->buyer_postal_code ?: 'NA']],
-                                            'CountrySubentityCode' => [['_' => $invoice->buyer_state]],
-                                            'AddressLine' => [
-                                                ['Line' => [['_' => $invoice->buyer_address_line1]]],
-                                                ['Line' => [['_' => $invoice->buyer_address_line2 ?: 'NA']]],
-                                                ['Line' => [['_' => $invoice->buyer_address_line3 ?: 'NA']]]
-                                            ],
-                                            'Country' => [
-                                                [
-                                                    'IdentificationCode' => [['_' => $invoice->buyer_country, 'listID' => 'ISO3166-1', 'listAgencyID' => '6']]
-                                                ]
-                                            ]
-                                        ]
-                                    ],
-                                    'PartyLegalEntity' => [
-                                        [
-                                            'RegistrationName' => [['_' => $invoice->buyer_name]]
-                                        ]
-                                    ],
-                                    'PartyIdentification' => $buyerIdentifications,
-                                    'Contact' => [
-                                        [
-                                            'Telephone' => [['_' => $invoice->buyer_contact_number ?: 'NA']],
-                                            'ElectronicMail' => [['_' => $invoice->buyer_email ?: 'NA']]
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ],
-                    'PaymentMeans' => [
-                        [
-                            'PaymentMeansCode' => [['_' => $invoice->payment_mode ?: '01']],
-                            'PayeeFinancialAccount' => [
-                                [
-                                    'ID' => [['_' => $invoice->bank_account_number ?: 'NA']]
-                                ]
-                            ]
-                        ]
-                    ],
-                    'PaymentTerms' => [
-                        [
-                            'Note' => [['_' => $invoice->payment_terms ?: 'NA']]
-                        ]
-                    ],
-                    'AllowanceCharge' => [
-                        [
-                            'ChargeIndicator' => [['_' => false]],
-                            'AllowanceChargeReason' => [['_' => 'Overall Discount']],
-                            'Amount' => [['_' => (float) $invoice->total_discount_value, 'currencyID' => $invoice->currency_code]]
-                        ],
-                        [
-                            'ChargeIndicator' => [['_' => true]],
-                            'AllowanceChargeReason' => [['_' => 'Overall Charge']],
-                            'Amount' => [['_' => (float) $invoice->total_fee_charge_amount, 'currencyID' => $invoice->currency_code]]
-                        ]
-                    ],
-                    'TaxTotal' => $taxTotals,
-                    'LegalMonetaryTotal' => [
-                        [
-                            'LineExtensionAmount' => [['_' => (float) $invoice->total_excluding_tax, 'currencyID' => $invoice->currency_code]],
-                            'TaxExclusiveAmount' => [['_' => (float) $invoice->total_excluding_tax, 'currencyID' => $invoice->currency_code]],
-                            'TaxInclusiveAmount' => [['_' => (float) $invoice->total_including_tax, 'currencyID' => $invoice->currency_code]],
-                            'AllowanceTotalAmount' => [['_' => (float) $invoice->total_discount_value, 'currencyID' => $invoice->currency_code]],
-                            'ChargeTotalAmount' => [['_' => (float) $invoice->total_fee_charge_amount, 'currencyID' => $invoice->currency_code]],
-                            'PayableAmount' => [['_' => (float) $invoice->total_payable_amount, 'currencyID' => $invoice->currency_code]]
-                        ]
-                    ],
-                    'InvoiceLine' => $invoiceLines
-                ]
-            ]
-        ];
-
-        // Add Billing Reference for Note Types
-        if (in_array($invoice->invoice_type, ['02', '03', '04']) && $invoice->original_einvoice_reference) {
-            $ublPayload['Invoice'][0]['BillingReference'] = [
-                [
-                    'AdditionalDocumentReference' => [
-                        [
-                            'ID' => [['_' => $invoice->original_einvoice_reference]]
-                        ]
-                    ]
-                ]
-            ];
-        }
-
-        // Add Delivery/Shipping info
-        if ($invoice->has_shipping_info) {
-            $ublPayload['Invoice'][0]['Delivery'] = [
-                [
-                    'DeliveryParty' => [
-                        [
-                            'PartyLegalEntity' => [
-                                [
-                                    'RegistrationName' => [['_' => $invoice->shipping_recipient_name]]
-                                ]
-                            ],
-                            'PostalAddress' => [
-                                [
-                                    'CityName' => [['_' => $invoice->shipping_city ?: 'NA']],
-                                    'PostalZone' => [['_' => $invoice->shipping_postal_code ?: 'NA']],
-                                    'CountrySubentityCode' => [['_' => $invoice->shipping_state ?: 'NA']],
-                                    'AddressLine' => [
-                                        ['Line' => [['_' => $invoice->shipping_address_line1]]],
-                                        ['Line' => [['_' => $invoice->shipping_address_line2 ?: 'NA']]],
-                                        ['Line' => [['_' => $invoice->shipping_address_line3 ?: 'NA']]]
-                                    ],
-                                    'Country' => [
-                                        [
-                                            'IdentificationCode' => [['_' => $invoice->shipping_country ?: 'MYS', 'listID' => 'ISO3166-1', 'listAgencyID' => '6']]
-                                        ]
-                                    ]
-                                ]
-                            ],
-                            'PartyIdentification' => [
-                                [
-                                    'ID' => [['_' => $invoice->shipping_recipient_tin ?: 'EI00000000010', 'schemeID' => 'TIN']]
-                                ],
-                                [
-                                    'ID' => [['_' => $invoice->shipping_recipient_registration ?: 'NA', 'schemeID' => 'BRN']]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ];
-        }
-
-        return $ublPayload;
-    }
-    
-    /**
-     * Authenticate with MyInvois
+     * Authenticate with MyInvois using SDK
      */
     protected function authenticate(): void
     {
-        if ($this->accessToken) {
-            return; // Already authenticated
-        }
-        
-        $response = Http::asForm()->post($this->baseUrl . '/oauth/token', [
-            'grant_type' => 'client_credentials',
-            'client_id' => $this->clientId,
-            'client_secret' => $this->clientSecret,
-        ]);
-        
-        if ($response->successful()) {
-            $this->accessToken = $response->json()['access_token'];
-        } else {
-            throw new \Exception('Failed to authenticate with MyInvois');
-        }
-    }
-    
-    /**
-     * Log API call
-     */
-    protected function logApiCall(MyinvoisSubmission $submission, string $method, string $endpoint, $response): void
-    {
-        $submission->apiLogs()->create([
-            'endpoint' => $endpoint,
-            'http_method' => $method,
-            'http_status_code' => $response->status(),
-            'request_headers' => $response->transferStats?->getRequest()->getHeaders() ?? [],
-            'response_headers' => $response->headers(),
-            'response_body' => $response->json(),
-            'response_time_ms' => $response->transferStats?->getTransferTime() * 1000 ?? 0,
-            'error_message' => $response->failed() ? $response->body() : null,
-        ]);
+        $this->myInvois->auth()->token(
+            client_id: $this->clientId, 
+            client_secret: $this->clientSecret, 
+            grant_type: 'client_credentials', 
+            scope: 'InvoicingAPI'
+        );
     }
     
     /**

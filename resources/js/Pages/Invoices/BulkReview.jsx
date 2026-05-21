@@ -91,8 +91,8 @@ export default function BulkReview({ parsedData, filename }) {
         setData('invoices', newRows);
     };
 
-    const handleCommit = () => {
-        post(route('invoices.bulk-commit'));
+    const handleCommit = (submit = false) => {
+        post(route('invoices.bulk-commit', { submit_to_myinvois: submit ? 1 : 0 }));
     };
 
     const analyzeAnomalies = async () => {
@@ -185,8 +185,15 @@ export default function BulkReview({ parsedData, filename }) {
                         <Link href={route('invoices.index')}>
                             <SecondaryButton>Cancel</SecondaryButton>
                         </Link>
-                        <PrimaryButton onClick={handleCommit} disabled={processing || rows.length === 0}>
+                        <PrimaryButton onClick={() => handleCommit(false)} disabled={processing || rows.length === 0}>
                             {processing ? 'Committing...' : 'Commit & Save'}
+                        </PrimaryButton>
+                        <PrimaryButton 
+                            onClick={() => handleCommit(true)} 
+                            disabled={processing || rows.length === 0}
+                            className="bg-green-600 hover:bg-green-700 focus:bg-green-700 active:bg-green-800"
+                        >
+                            {processing ? 'Processing...' : 'Commit & Submit to MyInvois'}
                         </PrimaryButton>
                     </div>
                 </div>

@@ -23,3 +23,8 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Test Scripts
+test_*.php
+submit_real.php
+scratch.php

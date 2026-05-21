@@ -34,8 +34,8 @@ class BusinessProfileRequest extends FormRequest
             'tax_identification_number' => [
                 'required',
                 'string',
-                'max:20', // Changed from size:15 to max:20 to allow 14 chars as requested and other formats
-                // 'regex:/^[A-Z][0-9]{19}$/', // Keeping regex off or strictly following user IRBM spec? Safe to require string first.
+                'max:20',
+                'regex:/^[A-Z]{1,2}[0-9A-Z]{1,18}$/',
                 'unique:business_profiles,tax_identification_number,' . $businessProfileId
             ],
             'sst_registration_number' => ['nullable', 'string', 'max:30'],
@@ -59,7 +59,7 @@ class BusinessProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'tax_identification_number.regex' => 'TIN must start with a letter followed by 19 digits',
+            'tax_identification_number.regex' => 'TIN format is invalid. It should start with 1-2 letters followed by alphanumeric characters (e.g., C2584563222, IG51167122090)',
             'tax_identification_number.unique' => 'This TIN is already registered',
             'country.regex' => 'Country code must be ISO 3166-1 alpha-2 format (e.g., MY)',
         ];

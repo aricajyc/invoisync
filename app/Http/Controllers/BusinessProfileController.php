@@ -39,4 +39,57 @@ class BusinessProfileController extends Controller
             return Redirect::route('dashboard')->with('status', 'Business profile saved successfully.');
         }
     }
+    /**
+     * Validate TIN using MyInvois API.
+     */
+    public function validateTin(Request $request)
+    {
+        $request->validate([
+            'tin' => 'required|string',
+            'registration_number' => 'required|string',
+            'client_id' => 'required|string',
+            'client_secret' => 'required|string',
+        ]);
+
+        try {
+            $myInvois = new \Laraditz\MyInvois\MyInvois(
+                is_sandbox: env('MYINVOIS_SANDBOX', true), 
+                client_id: $request->client_id, 
+                client_secret: $request->client_secret
+            );
+            
+            $myInvois->auth()->token(
+                client_id: $request->client_id, 
+                client_secret: $request->client_secret, 
+                grant_type: 'client_credentials', 
+                scope: 'InvoicingAPI'
+            );
+            
+            $idType = str_starts_with($request->tin, 'IG') ? 'NRIC' : 'BRN';
+            
+            $result = $myInvois->taxpayer()->validateTin(
+                payload: [
+                    'tin' => $request->tin, 
+                    'idType' => $idType, 
+                    'idValue' => $request->registration_number
+                ]
+            );
+
+            if ($result['success'] ?? false) {
+                return response()->json(['valid' => true, 'message' => 'TIN is valid and active!']);
+            }
+            
+            return response()->json(['valid' => false, 'message' => 'TIN validation failed. Please check your TIN and Registration Number.']);
+        } catch (\Exception $e) {
+            $msg = $e->getMessage();
+            preg_match('/\{.*\}/s', $msg, $matches);
+            if ($matches) {
+                $error = json_decode($matches[0], true);
+                if (isset($error['error']['message'])) {
+                    return response()->json(['valid' => false, 'message' => $error['error']['message']]);
+                }
+            }
+            return response()->json(['valid' => false, 'message' => 'Error: ' . $msg]);
+        }
+    }
 }

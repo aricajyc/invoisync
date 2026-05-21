@@ -52,7 +52,7 @@ class MyinvoisSubmission extends Model
 
     public function scopeRejected($query)
     {
-        return $query->where('status', 'rejected');
+        return $query->whereIn('status', ['rejected', 'invalid']);
     }
 
     public function scopePending($query)

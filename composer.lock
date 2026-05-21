@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "11d690a961fc96a12ec6d16a6c8877e4",
+    "content-hash": "e0a3c9b74d778768218e79bb6a8d79da",
     "packages": [
         {
             "name": "askdkc/breezejp",
@@ -1282,6 +1282,89 @@
                 "source": "https://github.com/inertiajs/inertia-laravel/tree/v2.0.18"
             },
             "time": "2025-12-31T16:10:57+00:00"
+        },
+        {
+            "name": "laraditz/my-invois",
+            "version": "0.0.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laraditz/my-invois.git",
+                "reference": "6d7ff7d625beab87e6f317243dffd37eb2ba7c02"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laraditz/my-invois/zipball/6d7ff7d625beab87e6f317243dffd37eb2ba7c02",
+                "reference": "6d7ff7d625beab87e6f317243dffd37eb2ba7c02",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^11.0|^12.0",
+                "php": "^8.2",
+                "sabre/xml": "^4.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^9.0|^10.0",
+                "phpunit/phpunit": "^11.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "MyInvois": "Laraditz\\MyInvois\\Facades\\MyInvois",
+                        "MyInvoisHelper": "Laraditz\\MyInvois\\Facades\\MyInvoisHelper"
+                    },
+                    "providers": [
+                        "Laraditz\\MyInvois\\MyInvoisServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Laraditz\\MyInvois\\": "src",
+                    "Laraditz\\MyInvois\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Raditz Farhan",
+                    "email": "raditzfarhan@gmail.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Laravel package for interacting with MyInvois API.",
+            "homepage": "https://github.com/laraditz/my-invois",
+            "keywords": [
+                "E-Invoice",
+                "Hasil",
+                "LHDNM",
+                "Lembaga Hasil Dalam Negeri Malaysia",
+                "einvoice",
+                "laraditz",
+                "laravel",
+                "lhdn",
+                "my-invois",
+                "myinvois",
+                "sdk"
+            ],
+            "support": {
+                "issues": "https://github.com/laraditz/my-invois/issues",
+                "source": "https://github.com/laraditz/my-invois/tree/0.0.9"
+            },
+            "funding": [
+                {
+                    "url": "https://www.buymeacoffee.com/raditzfarhan",
+                    "type": "buy_me_a_coffee"
+                },
+                {
+                    "url": "https://github.com/raditzfarhan",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-08-26T03:39:43+00:00"
         },
         {
             "name": "laravel/framework",
@@ -3877,6 +3960,140 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.9.2"
             },
             "time": "2025-12-14T04:43:48+00:00"
+        },
+        {
+            "name": "sabre/uri",
+            "version": "3.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sabre-io/uri.git",
+                "reference": "a926c749dddfb289b8a9b5218d16ac06affdc631"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sabre-io/uri/zipball/a926c749dddfb289b8a9b5218d16ac06affdc631",
+                "reference": "a926c749dddfb289b8a9b5218d16ac06affdc631",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.95",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^10.5",
+                "rector/rector": "^2.4"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "lib/functions.php"
+                ],
+                "psr-4": {
+                    "Sabre\\Uri\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Evert Pot",
+                    "email": "me@evertpot.com",
+                    "homepage": "http://evertpot.com/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Functions for making sense out of URIs.",
+            "homepage": "http://sabre.io/uri/",
+            "keywords": [
+                "rfc3986",
+                "uri",
+                "url"
+            ],
+            "support": {
+                "forum": "https://groups.google.com/group/sabredav-discuss",
+                "issues": "https://github.com/sabre-io/uri/issues",
+                "source": "https://github.com/fruux/sabre-uri"
+            },
+            "time": "2026-04-26T04:19:03+00:00"
+        },
+        {
+            "name": "sabre/xml",
+            "version": "4.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sabre-io/xml.git",
+                "reference": "bec83cbe2f4e1e1ca4254ed8d7caa7e32cc74b05"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sabre-io/xml/zipball/bec83cbe2f4e1e1ca4254ed8d7caa7e32cc74b05",
+                "reference": "bec83cbe2f4e1e1ca4254ed8d7caa7e32cc74b05",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-xmlreader": "*",
+                "ext-xmlwriter": "*",
+                "lib-libxml": ">=2.6.20",
+                "php": "^8.2",
+                "sabre/uri": ">=2.0,<4.0.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.95",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^10.5",
+                "rector/rector": "^2.4"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "lib/Deserializer/functions.php",
+                    "lib/Serializer/functions.php"
+                ],
+                "psr-4": {
+                    "Sabre\\Xml\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Evert Pot",
+                    "email": "me@evertpot.com",
+                    "homepage": "http://evertpot.com/",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Markus Staab",
+                    "email": "markus.staab@redaxo.de",
+                    "role": "Developer"
+                }
+            ],
+            "description": "sabre/xml is an XML library that you may not hate.",
+            "homepage": "https://sabre.io/xml/",
+            "keywords": [
+                "XMLReader",
+                "XMLWriter",
+                "dom",
+                "xml"
+            ],
+            "support": {
+                "forum": "https://groups.google.com/group/sabredav-discuss",
+                "issues": "https://github.com/sabre-io/xml/issues",
+                "source": "https://github.com/fruux/sabre-xml"
+            },
+            "time": "2026-04-27T10:56:01+00:00"
         },
         {
             "name": "spatie/laravel-package-tools",

@@ -86,6 +86,7 @@ class InvoiceController extends Controller
         }
 
         $invoices = $query->latest()
+            ->with('myinvoisSubmission')
             ->paginate(15)
             ->withQueryString();
 
@@ -275,13 +276,15 @@ class InvoiceController extends Controller
         $failed = 0;
 
         $bulkService = app(\App\Services\BulkUploadService::class);
+        $invoicesToSubmit = [];
         foreach ($invoices as $index => $row) {
             try {
                 $nestedData = $bulkService->formatFlatToNested($row['data']);
                 // Assign batch id so invoice is linked to this batch
                 $nestedData['bulk_upload_batch_id'] = $batch->id;
                 
-                $invoiceService->createInvoice($nestedData, $request->user());
+                $invoice = $invoiceService->createInvoice($nestedData, $request->user());
+                $invoicesToSubmit[] = $invoice->id;
                 $successful++;
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Bulk commit row failed: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
@@ -309,14 +312,149 @@ class InvoiceController extends Controller
             'processing_completed_at' => now(),
         ]);
 
+        $myinvoisMsg = '';
+        if ($request->input('submit_to_myinvois') && !empty($invoicesToSubmit)) {
+            $businessProfile = $request->user()->businessProfile;
+            if ($businessProfile && $businessProfile->myinvois_client_id && $businessProfile->myinvois_client_secret) {
+                $myInvoisService = new \App\Services\MyInvoisService($businessProfile->myinvois_client_id, $businessProfile->myinvois_client_secret);
+                $submitSuccess = 0;
+                $submitFail = 0;
+                $invoicesToProcess = Invoice::whereIn('id', $invoicesToSubmit)->get();
+                foreach ($invoicesToProcess as $invoiceToSubmit) {
+                    try {
+                        $submission = $myInvoisService->submitInvoice($invoiceToSubmit);
+                        if ($submission->status === 'accepted') {
+                            $submitSuccess++;
+                        } else {
+                            $submitFail++;
+                        }
+                    } catch (\Exception $e) {
+                        $submitFail++;
+                        \Illuminate\Support\Facades\Log::error('Bulk submission failed for Invoice ' . $invoiceToSubmit->id . ': ' . $e->getMessage());
+                    }
+                }
+                $myinvoisMsg = " | MyInvois Submission: {$submitSuccess} accepted, {$submitFail} rejected/failed.";
+            } else {
+                $myinvoisMsg = " | (MyInvois submission skipped: Credentials not configured in Business Profile.)";
+            }
+        }
+
         \App\Models\UserActivity::create([
             'user_id' => $request->user()->id,
             'action' => 'Bulk Commit',
-            'description' => "Committed bulk upload batch {$batch->batch_reference}: {$successful} successful, {$failed} failed.",
+            'description' => "Committed bulk upload batch {$batch->batch_reference}: {$successful} successful, {$failed} failed." . $myinvoisMsg,
             'ip_address' => $request->ip(),
         ]);
 
         return redirect()->route('invoices.index')
-            ->with('status', "Bulk import complete. Batch Reference: {$batch->batch_reference}. ({$successful} imported, {$failed} failed)");
+            ->with('status', "Bulk import complete. Batch Reference: {$batch->batch_reference}. ({$successful} imported, {$failed} failed)" . $myinvoisMsg);
+    }
+
+    /**
+     * Submit a single invoice to MyInvois API.
+     */
+    public function submitToMyInvois(Invoice $invoice, Request $request)
+    {
+        if ($invoice->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $businessProfile = $request->user()->businessProfile;
+        
+        if (!$businessProfile || !$businessProfile->myinvois_client_id || !$businessProfile->myinvois_client_secret) {
+            return redirect()->route('profile.edit')->with('status', 'Please configure your MyInvois API credentials in your Business Profile first.');
+        }
+
+        try {
+            $myInvoisService = new \App\Services\MyInvoisService($businessProfile->myinvois_client_id, $businessProfile->myinvois_client_secret);
+            $submission = $myInvoisService->submitInvoice($invoice);
+
+            if ($submission->status === 'accepted') {
+                return back()->with('status', "Invoice successfully submitted to MyInvois. UID: {$submission->myinvois_uid}");
+            } else {
+                return back()->withErrors(['myinvois' => "Submission rejected: {$submission->rejection_reason}"]);
+            }
+        } catch (\Exception $e) {
+            return back()->withErrors(['myinvois' => "Failed to connect to MyInvois: " . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Submit multiple invoices to MyInvois API.
+     */
+    public function bulkSubmitToMyInvois(Request $request)
+    {
+        $request->validate([
+            'invoice_ids' => 'required|array',
+            'invoice_ids.*' => 'exists:invoices,id',
+        ]);
+
+        $businessProfile = $request->user()->businessProfile;
+        
+        if (!$businessProfile || !$businessProfile->myinvois_client_id || !$businessProfile->myinvois_client_secret) {
+            return redirect()->route('profile.edit')->with('status', 'Please configure your MyInvois API credentials in your Business Profile first.');
+        }
+
+        $invoices = Invoice::whereIn('id', $request->invoice_ids)
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['draft', 'invalid', 'rejected'])
+            ->get();
+
+        if ($invoices->isEmpty()) {
+            return back()->withErrors(['myinvois' => 'No valid invoices found for submission.']);
+        }
+
+        $successful = 0;
+        $failed = 0;
+
+        $myInvoisService = new \App\Services\MyInvoisService($businessProfile->myinvois_client_id, $businessProfile->myinvois_client_secret);
+
+        foreach ($invoices as $invoice) {
+            try {
+                $submission = $myInvoisService->submitInvoice($invoice);
+                if ($submission->status === 'accepted') {
+                    $successful++;
+                } else {
+                    $failed++;
+                }
+            } catch (\Exception $e) {
+                $failed++;
+                \Illuminate\Support\Facades\Log::error('Bulk submission failed for Invoice ' . $invoice->id . ': ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('status', "Bulk submission completed: {$successful} accepted, {$failed} rejected/failed.");
+    }
+
+    /**
+     * Sync invoice status from MyInvois API.
+     */
+    public function syncMyInvoisStatus(Invoice $invoice, Request $request)
+    {
+        if ($invoice->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $businessProfile = $request->user()->businessProfile;
+        
+        if (!$businessProfile || !$businessProfile->myinvois_client_id || !$businessProfile->myinvois_client_secret) {
+            return redirect()->route('profile.edit')->with('status', 'Please configure your MyInvois API credentials in your Business Profile first.');
+        }
+
+        try {
+            $myInvoisService = new \App\Services\MyInvoisService($businessProfile->myinvois_client_id, $businessProfile->myinvois_client_secret);
+            $success = $myInvoisService->syncInvoiceStatus($invoice);
+
+            if ($success) {
+                if ($invoice->status === 'invalid' || $invoice->status === 'rejected') {
+                    return back()->withErrors(['myinvois' => "Status synced: Invoice is " . ucfirst($invoice->status) . ". Check details for exact LHDN errors."]);
+                }
+                return back()->with('status', "Invoice status successfully synced from MyInvois. Current Status: " . ucfirst($invoice->status));
+            } else {
+                return back()->withErrors(['myinvois' => "Failed to sync status. It may still be processing or the API is unavailable."]);
+            }
+        } catch (\Exception $e) {
+            return back()->withErrors(['myinvois' => "Failed to connect to MyInvois: " . $e->getMessage()]);
+        }
     }
 }

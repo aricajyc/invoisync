@@ -155,7 +155,7 @@ class Invoice extends Model
 
     public function myinvoisSubmission()
     {
-        return $this->hasOne(MyinvoisSubmission::class);
+        return $this->hasOne(MyinvoisSubmission::class)->latest();
     }
 
     // ==================== SCOPES ====================
@@ -182,7 +182,7 @@ class Invoice extends Model
 
     public function scopeRejected($query)
     {
-        return $query->where('status', 'rejected');
+        return $query->whereIn('status', ['rejected', 'invalid']);
     }
 
     public function scopeByInvoiceType($query, string $type)
@@ -340,7 +340,7 @@ class Invoice extends Model
 
     public function isEditable(): bool
     {
-        return in_array($this->status, ['draft', 'rejected']);
+        return in_array($this->status, ['draft', 'rejected', 'invalid']);
     }
 
     public function canSubmit(): bool

@@ -36,7 +36,7 @@ class StoreInvoiceRequest extends FormRequest
             
             // ==================== SUPPLIER DETAILS (MANDATORY) ====================
             'supplier_name' => ['required', 'string', 'max:300'],
-            'supplier_tin' => ['required', 'string', 'max:20', 'regex:/^[A-Z][0-9]{1,19}$/'],
+            'supplier_tin' => ['required', 'string', 'max:20', 'regex:/^[A-Z]{1,2}[0-9A-Z]{1,18}$/'],
             'supplier_registration_number' => ['required', 'string', 'max:50'],
             'supplier_sst_registration_number' => ['nullable', 'string', 'max:20'],
             'supplier_tourism_tax_number' => ['nullable', 'string', 'max:20'],
@@ -127,11 +127,11 @@ class StoreInvoiceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'supplier_tin.regex' => 'Supplier TIN must start with a letter followed by 19 digits (e.g., C1234567890123456789)',
+            'supplier_tin.regex' => 'Supplier TIN format is invalid. It should start with 1-2 letters followed by alphanumeric characters (e.g., C2584563222, IG51167122090)',
             'supplier_msic_code.size' => 'Supplier MSIC code must be exactly 5 digits',
             'supplier_msic_code.regex' => 'Supplier MSIC code must contain only numbers',
             'supplier_country.size' => 'Country code must be ISO 3166-1 alpha-3 format (e.g., MYS)',
-            'buyer_tin.size' => 'Buyer TIN must be exactly 20 characters (use EI00000000010 if not available)',
+            'buyer_tin.max' => 'Buyer TIN must not exceed 20 characters (use EI00000000010 if not available)',
             'currency_code.regex' => 'Currency code must be ISO 4217 format (e.g., MYR, USD)',
             'line_items.required' => 'At least one line item is required',
             'line_items.*.classification_code.required' => 'Classification code is mandatory for each line item',

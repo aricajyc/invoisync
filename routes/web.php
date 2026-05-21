@@ -25,6 +25,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/invoices/bulk-commit', [App\Http\Controllers\InvoiceController::class, 'bulkCommit'])->name('invoices.bulk-commit');
     Route::resource('invoices', App\Http\Controllers\InvoiceController::class)->only(['index', 'create', 'store', 'edit', 'update']);
     Route::post('/invoices/detect-anomaly', [App\Http\Controllers\InvoiceController::class, 'detectAnomaly'])->name('invoices.detect-anomaly');
+    Route::post('/invoices/bulk-submit-myinvois', [App\Http\Controllers\InvoiceController::class, 'bulkSubmitToMyInvois'])->name('invoices.bulk-submit-myinvois');
+    Route::post('/invoices/{invoice}/submit-myinvois', [App\Http\Controllers\InvoiceController::class, 'submitToMyInvois'])->name('invoices.submit-myinvois');
+    Route::post('/invoices/{invoice}/sync-status', [App\Http\Controllers\InvoiceController::class, 'syncMyInvoisStatus'])->name('invoices.sync-status');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -32,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/activity-logs', [App\Http\Controllers\UserActivityController::class, 'index'])->name('activity-logs.index');
     Route::get('/business-profile', [BusinessProfileController::class, 'show'])->name('business-profile.show');
     Route::post('/business-profile', [BusinessProfileController::class, 'store'])->name('business-profile.store');
+    Route::post('/business-profile/validate-tin', [BusinessProfileController::class, 'validateTin'])->name('business-profile.validate-tin');
 
     Route::prefix('ref')->group(function () {
         Route::get('/countries', [App\Http\Controllers\Api\ReferenceDataController::class, 'getCountries'])->name('ref.countries');

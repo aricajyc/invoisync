@@ -2,6 +2,7 @@
 
 return [
     'base_url' => env('MYINVOIS_BASE_URL', 'https://api.myinvois.hasil.gov.my'),
+    'identity_url' => env('MYINVOIS_IDENTITY_URL', 'https://identity.myinvois.hasil.gov.my'),
     'api_key' => env('MYINVOIS_API_KEY'),
     'client_id' => env('MYINVOIS_CLIENT_ID'),
     'client_secret' => env('MYINVOIS_CLIENT_SECRET'),

@@ -5,13 +5,17 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import Pagination from '@/Components/Pagination';
+import Modal from '@/Components/Modal';
 import { useState, useRef } from 'react';
 
 export default function Index({ invoices, filters = {} }) {
     const [showAdvanced, setShowAdvanced] = useState(false);
     const fileInputRef = useRef(null);
-    
     const [isUploading, setIsUploading] = useState(false);
+    const [selectedInvoices, setSelectedInvoices] = useState([]);
+    const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
+    const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
+    const [selectedRejectionReason, setSelectedRejectionReason] = useState('');
 
     const handleBulkUploadChange = (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -234,7 +238,9 @@ export default function Index({ invoices, filters = {} }) {
                                                 <option value="draft">Draft</option>
                                                 <option value="validated">Validated</option>
                                                 <option value="submitted">Submitted</option>
+                                                <option value="approved">Approved</option>
                                                 <option value="rejected">Rejected</option>
+                                                <option value="invalid">Invalid</option>
                                                 <option value="cancelled">Cancelled</option>
                                             </select>
                                         </div>
@@ -275,6 +281,30 @@ export default function Index({ invoices, filters = {} }) {
                                     </svg>
                                     {showAdvanced ? 'Hide Advanced' : 'Advanced Search'}
                                 </SecondaryButton>
+                                
+                                {selectedInvoices.length > 0 && (
+                                    <PrimaryButton 
+                                        type="button" 
+                                        onClick={() => {
+                                            if (confirm(`Are you sure you want to submit ${selectedInvoices.length} invoices to MyInvois?`)) {
+                                                setIsBulkSubmitting(true);
+                                                router.post(route('invoices.bulk-submit-myinvois'), { invoice_ids: selectedInvoices }, {
+                                                    onFinish: () => {
+                                                        setIsBulkSubmitting(false);
+                                                        setSelectedInvoices([]);
+                                                    }
+                                                });
+                                            }
+                                        }}
+                                        disabled={isBulkSubmitting}
+                                        className="bg-green-600 hover:bg-green-700 focus:bg-green-700 active:bg-green-800 inline-flex items-center ml-auto"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                        </svg>
+                                        {isBulkSubmitting ? 'Submitting...' : `Submit ${selectedInvoices.length} Selected`}
+                                    </PrimaryButton>
+                                )}
                             </div>
                         </form>
                     </div>
@@ -293,6 +323,20 @@ export default function Index({ invoices, filters = {} }) {
                                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                         <thead className="bg-gray-50 dark:bg-gray-700">
                                             <tr>
+                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 whitespace-nowrap w-12">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                        checked={invoices.data.length > 0 && selectedInvoices.length === invoices.data.length}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedInvoices(invoices.data.map(inv => inv.id));
+                                                            } else {
+                                                                setSelectedInvoices([]);
+                                                            }
+                                                        }}
+                                                    />
+                                                </th>
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-300 whitespace-nowrap">
                                                     Invoice No.
                                                 </th>
@@ -335,23 +379,73 @@ export default function Index({ invoices, filters = {} }) {
                                             {invoices.data.map((invoice) => (
                                                 <tr 
                                                     key={invoice.id} 
-                                                    onClick={() => router.get(route('invoices.edit', invoice.id))}
-                                                    className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                                    className="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                                 >
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                            checked={selectedInvoices.includes(invoice.id)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedInvoices([...selectedInvoices, invoice.id]);
+                                                                } else {
+                                                                    setSelectedInvoices(selectedInvoices.filter(id => id !== invoice.id));
+                                                                }
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td 
+                                                        className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 cursor-pointer"
+                                                        onClick={() => router.get(route('invoices.edit', invoice.id))}
+                                                    >
                                                         {invoice.invoice_number}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <td 
+                                                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 cursor-pointer"
+                                                        onClick={() => router.get(route('invoices.edit', invoice.id))}
+                                                    >
                                                         {getInvoiceTypeName(invoice.invoice_type)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                            ${invoice.status === 'validated' || invoice.status === 'submitted' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                                                invoice.status === 'draft' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' :
-                                                                    invoice.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                                                                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
-                                                            {invoice.status ? invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1) : '-'}
-                                                        </span>
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                                ${invoice.status === 'validated' || invoice.status === 'submitted' || invoice.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                                                    invoice.status === 'draft' || invoice.status === 'cancelled' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' :
+                                                                        invoice.status === 'rejected' || invoice.status === 'invalid' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                                                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
+                                                                {invoice.status ? invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1) : '-'}
+                                                            </span>
+                                                            {(invoice.status === 'rejected' || invoice.status === 'invalid') && invoice.myinvois_submission?.rejection_reason && (
+                                                                <button 
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setSelectedRejectionReason(invoice.myinvois_submission.rejection_reason.split(' | ').join('\n\n• '));
+                                                                        setRejectionModalOpen(true);
+                                                                    }}
+                                                                    className="text-red-600 hover:text-red-800 focus:outline-none"
+                                                                    title="View Error Details"
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                </button>
+                                                            )}
+                                                            {invoice.myinvois_uid && (invoice.status === 'submitted' || invoice.status === 'approved' || invoice.status === 'rejected' || invoice.status === 'invalid' || invoice.status === 'validated' || invoice.status === 'cancelled') && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        router.post(route('invoices.sync-status', invoice.id), {}, { preserveScroll: true });
+                                                                    }}
+                                                                    className="text-gray-500 hover:text-indigo-600 focus:outline-none"
+                                                                    title="Sync Status from LHDN"
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                                    </svg>
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {invoice.invoice_date_time ? new Date(invoice.invoice_date_time).toLocaleDateString('en-GB') : '-'}
@@ -374,7 +468,7 @@ export default function Index({ invoices, filters = {} }) {
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
                                                         {invoice.total_payable_amount !== null && invoice.total_payable_amount !== undefined ? Number(invoice.total_payable_amount).toFixed(2) : '-'}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 max-w-[150px] truncate" title={invoice.myinvois_uid}>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                         {invoice.myinvois_uid || '-'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -395,6 +489,22 @@ export default function Index({ invoices, filters = {} }) {
                     </div>
                 </div>
             </div>
+
+            <Modal show={rejectionModalOpen} onClose={() => setRejectionModalOpen(false)}>
+                <div className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                        Submission Error Details
+                    </h2>
+                    <div className="mt-2 mb-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded text-sm font-mono whitespace-pre-wrap break-words border border-red-200 dark:border-red-800">
+                        {selectedRejectionReason}
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <SecondaryButton onClick={() => setRejectionModalOpen(false)}>
+                            Close
+                        </SecondaryButton>
+                    </div>
+                </div>
+            </Modal>
         </AuthenticatedLayout>
     );
 }

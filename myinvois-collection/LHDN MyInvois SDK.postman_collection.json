@@ -1,0 +1,2076 @@
+{
+  "info": {
+    "_postman_id": "d418daaa-f657-4c3c-b996-ff61d03f8a97",
+    "name": "LHDN MyInvois SDK",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "37372433"
+  },
+  "item": [
+    {
+      "name": "Platform",
+      "item": [
+        {
+          "name": "Login as Taxpayer System",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//parses the response body into a JavaScript object named jsonData\r",
+                  "const jsonData = pm.response.json();\r",
+                  "//extracts the access_token value from the parsed JSON and stores it in the accessToken variable\r",
+                  "const token = jsonData.access_token;\r",
+                  "//sets the environment variable generated_access_token with the value of accessToken\r",
+                  "pm.environment.set(\"generatedAccessToken\", token);\r",
+                  "\r",
+                  "//var jsonData = JSON.parse(responseBody);\r",
+                  "//postman.setEnvironmentVariable(\"generatedAccessToken\", jsonData.access_token);"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {}
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{clientSecret}}",
+                  "type": "text"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials",
+                  "type": "text"
+                },
+                {
+                  "key": "scope",
+                  "value": "InvoicingAPI",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://{{idSrvBaseUrl}}/connect/token",
+              "protocol": "https",
+              "host": [
+                "{{idSrvBaseUrl}}"
+              ],
+              "path": [
+                "connect",
+                "token"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "client_id",
+                      "value": "{{clientId}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "client_secret",
+                      "value": "{{clientSecret}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "grant_type",
+                      "value": "client_credentials",
+                      "type": "text"
+                    },
+                    {
+                      "key": "scope",
+                      "value": "InvoicingAPI",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "https://{{idSrvBaseUrl}}/connect/token",
+                  "protocol": "https",
+                  "host": [
+                    "{{idSrvBaseUrl}}"
+                  ],
+                  "path": [
+                    "connect",
+                    "token"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 03:37:40 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=UTF-8"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store, no-cache, max-age=0"
+                },
+                {
+                  "key": "Pragma",
+                  "value": "no-cache"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "2000"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"access_token\": \"eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk2RjNBNjU2OEFEQzY0MzZDNjVBNDg1MUQ5REM0NTlFQTlCM0I1NTRSUzI1NiIsIng1dCI6Imx2T21Wb3JjWkRiR1draFIyZHhGbnFtenRWUSIsInR5cCI6ImF0K2p3dCJ9.eyJpc3MiOiJodHRwczovL3ByZXByb2QtaWRlbnRpdHkubXlpbnZvaXMuaGFzaWwuZ292Lm15IiwibmJmIjoxNzIzMDAxODYwLCJpYXQiOjE3MjMwMDE4NjAsImV4cCI6MTcyMzAwNTQ2MCwiYXVkIjpbIkludm9pY2luZ0FQSSIsImh0dHBzOi8vcHJlcHJvZC1pZGVudGl0eS5teWludm9pcy5oYXNpbC5nb3YubXkvcmVzb3VyY2VzIl0sInNjb3BlIjpbIkludm9pY2luZ0FQSSJdLCJjbGllbnRfaWQiOiIxMjAzZmQwMi02YmY3LTQ4MDEtOTRhNi1mMGIzYTIzYTdmOTgiLCJJc1RheFJlcHJlcyI6IjEiLCJJc0ludGVybWVkaWFyeSI6IjAiLCJJbnRlcm1lZElkIjoiMCIsIkludGVybWVkVElOIjoiIiwiSW50ZXJtZWRFbmZvcmNlZCI6IjIiLCJuYW1lIjoiQzU4Njg2MTMwNDA6MTIwM2ZkMDItNmJmNy00ODAxLTk0YTYtZjBiM2EyM2E3Zjk4IiwiU1NJZCI6IjQ2MTIwMGYxLWYzZjAtNThlMS1jZDk2LWI2NWY3M2QyNzYyNiIsInByZWZlcnJlZF91c2VybmFtZSI6Ik15SW52b2ljZTJVIGUtaW52b2ljaW5nIG1pZGRsZXdhcmUgc29sdXRpb24iLCJUYXhJZCI6IjYwMyIsIlRheFRpbiI6IkM1ODY4NjEzMDQwIiwiUHJvZklkIjoiMzg1IiwiSXNUYXhBZG1pbiI6IjAiLCJJc1N5c3RlbSI6IjEifQ.HJYLDvxx5Zqb0nIE631pQXKrOqUP9AD0MUMP-9bLNCUHSbWWbJZHSmvRMRv2npcayCG-ofSNuDBW0XDQQ8KOd2wUd0RzZ0G0tjk19WZaaC6VOeQe6RAJntIUwUYCxaf6jADnTF_ahy3zL6u6isRum3zzpoHxJh7Xmi65LBQwZdvKOl8OIZNTQ-w5xus0qWxCp3cpo5yO_X6Pj7N0TPHvyhEFBPALGRIgrFLeOn_OBDc_AHaWTN3NH8zH3sBNKvbSVEICqyuJ891Gh9I7WnIZIQlxJSzrNJXisHWlKGp5-SJ8mCp7v2klWtgh1MOmPEvlmpT8m6muaWUVP65XtEHtDA\",\n    \"expires_in\": 3600,\n    \"token_type\": \"Bearer\",\n    \"scope\": \"InvoicingAPI\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as Intermediary System",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "//parses the response body into a JavaScript object named jsonData\r",
+                  "const jsonData = pm.response.json();\r",
+                  "//extracts the access_token value from the parsed JSON and stores it in the accessToken variable\r",
+                  "const token = jsonData.access_token;\r",
+                  "//sets the environment variable generated_access_token with the value of accessToken\r",
+                  "pm.environment.set(\"generatedAccessToken\", token);\r",
+                  "\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "onbehalfof",
+                "value": "C26812690090",
+                "description": "Client TIN number",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{clientId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{clientSecret}}",
+                  "type": "text"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials",
+                  "type": "text"
+                },
+                {
+                  "key": "scope",
+                  "value": "InvoicingAPI",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://{{idSrvBaseUrl}}/connect/token",
+              "protocol": "https",
+              "host": [
+                "{{idSrvBaseUrl}}"
+              ],
+              "path": [
+                "connect",
+                "token"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "404 - unauthorized_client",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "onbehalfof",
+                    "value": "100015840",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "client_id",
+                      "value": "{{clientId}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "client_secret",
+                      "value": "{{clientSecret}}",
+                      "type": "text"
+                    },
+                    {
+                      "key": "grant_type",
+                      "value": "client_credentials",
+                      "type": "text"
+                    },
+                    {
+                      "key": "scope",
+                      "value": "InvoicingAPI",
+                      "type": "text"
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "https://{{idSrvBaseUrl}}/connect/token",
+                  "protocol": "https",
+                  "host": [
+                    "{{idSrvBaseUrl}}"
+                  ],
+                  "path": [
+                    "connect",
+                    "token"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 04:07:42 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=UTF-8"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "no-store, no-cache, max-age=0"
+                },
+                {
+                  "key": "Pragma",
+                  "value": "no-cache"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "2000"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"error\": \"unauthorized_client\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Document Types",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documenttypes",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documenttypes"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://{{apiBaseUrl}}/api/v1.0/documenttypes",
+                  "protocol": "https",
+                  "host": [
+                    "{{apiBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "documenttypes"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 04:15:03 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "3613"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "0HN5J0FK5587L:00000001"
+                },
+                {
+                  "key": "requestTimeUTC",
+                  "value": "08/07/2024 04:15:03"
+                },
+                {
+                  "key": "responseProcessingTimeInTicks",
+                  "value": "4036"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "2000"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"result\": [\n        {\n            \"id\": 1,\n            \"invoiceTypeCode\": 1,\n            \"description\": \"Invoiceddfdsfd\",\n            \"activeFrom\": \"2024-05-02T10:34:11.15Z\",\n            \"activeTo\": null,\n            \"documentTypeVersions\": [\n                {\n                    \"id\": 1,\n                    \"name\": \"Version 1\",\n                    \"description\": \"Version 1\",\n                    \"activeFrom\": \"2024-04-26T17:47:49.2Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1,\n                    \"status\": \"Published\"\n                },\n                {\n                    \"id\": 2,\n                    \"name\": \"Version 2\",\n                    \"description\": \"Version 2\",\n                    \"activeFrom\": \"2024-06-21T15:13:17.29Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1.1,\n                    \"status\": \"Published\"\n                }\n            ]\n        },\n        {\n            \"id\": 2,\n            \"invoiceTypeCode\": 2,\n            \"description\": \"Credit Note\",\n            \"activeFrom\": \"2024-05-02T10:34:11.15Z\",\n            \"activeTo\": null,\n            \"documentTypeVersions\": [\n                {\n                    \"id\": 3,\n                    \"name\": \"Version 1\",\n                    \"description\": \"Version 1\",\n                    \"activeFrom\": \"2024-04-26T17:47:49.2033333Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1,\n                    \"status\": \"Published\"\n                },\n                {\n                    \"id\": 4,\n                    \"name\": \"Version 2\",\n                    \"description\": \"Version 2\",\n                    \"activeFrom\": \"2024-06-21T15:13:17.3133333Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1.1,\n                    \"status\": \"Published\"\n                }\n            ]\n        },\n        {\n            \"id\": 3,\n            \"invoiceTypeCode\": 3,\n            \"description\": \"Debit Note\",\n            \"activeFrom\": \"2024-05-02T10:34:11.1533333Z\",\n            \"activeTo\": null,\n            \"documentTypeVersions\": [\n                {\n                    \"id\": 5,\n                    \"name\": \"Version 1\",\n                    \"description\": \"Version 1\",\n                    \"activeFrom\": \"2024-04-26T17:47:49.1633333Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1,\n                    \"status\": \"Published\"\n                },\n                {\n                    \"id\": 6,\n                    \"name\": \"Version 2\",\n                    \"description\": \"Version 2\",\n                    \"activeFrom\": \"2024-06-21T15:13:17.3133333Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1.1,\n                    \"status\": \"Published\"\n                }\n            ]\n        },\n        {\n            \"id\": 4,\n            \"invoiceTypeCode\": 4,\n            \"description\": \"Refund Note\",\n            \"activeFrom\": \"2024-05-02T10:34:11.1566667Z\",\n            \"activeTo\": null,\n            \"documentTypeVersions\": [\n                {\n                    \"id\": 7,\n                    \"name\": \"Version 1\",\n                    \"description\": \"Version 1\",\n                    \"activeFrom\": \"2024-04-26T17:47:49.1666667Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1,\n                    \"status\": \"Published\"\n                },\n                {\n                    \"id\": 8,\n                    \"name\": \"Version 2\",\n                    \"description\": \"Version 2\",\n                    \"activeFrom\": \"2024-06-21T15:13:17.3266667Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1.1,\n                    \"status\": \"Published\"\n                }\n            ]\n        },\n        {\n            \"id\": 5,\n            \"invoiceTypeCode\": 11,\n            \"description\": \"Self-billed Invoice\",\n            \"activeFrom\": \"2024-05-02T10:34:11.16Z\",\n            \"activeTo\": null,\n            \"documentTypeVersions\": [\n                {\n                    \"id\": 9,\n                    \"name\": \"Version 1\",\n                    \"description\": \"Version 1\",\n                    \"activeFrom\": \"2024-04-26T17:47:49.17Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1,\n                    \"status\": \"Published\"\n                },\n                {\n                    \"id\": 10,\n                    \"name\": \"Version 2\",\n                    \"description\": \"Version 2\",\n                    \"activeFrom\": \"2024-06-21T15:13:17.33Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1.1,\n                    \"status\": \"Published\"\n                }\n            ]\n        },\n        {\n            \"id\": 6,\n            \"invoiceTypeCode\": 12,\n            \"description\": \"Self-billed Credit Note\",\n            \"activeFrom\": \"2024-05-02T10:34:11.16Z\",\n            \"activeTo\": null,\n            \"documentTypeVersions\": [\n                {\n                    \"id\": 11,\n                    \"name\": \"Version 1\",\n                    \"description\": \"Version 1\",\n                    \"activeFrom\": \"2024-04-26T17:47:49.17Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1,\n                    \"status\": \"Published\"\n                },\n                {\n                    \"id\": 12,\n                    \"name\": \"Version 2\",\n                    \"description\": \"Version 2\",\n                    \"activeFrom\": \"2024-06-21T15:13:17.35Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1.1,\n                    \"status\": \"Published\"\n                }\n            ]\n        },\n        {\n            \"id\": 7,\n            \"invoiceTypeCode\": 13,\n            \"description\": \"Self-billed Debit Note\",\n            \"activeFrom\": \"2024-05-02T10:34:11.16Z\",\n            \"activeTo\": null,\n            \"documentTypeVersions\": [\n                {\n                    \"id\": 13,\n                    \"name\": \"Version 1\",\n                    \"description\": \"Version 1\",\n                    \"activeFrom\": \"2024-04-26T17:47:49.18Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1,\n                    \"status\": \"Published\"\n                },\n                {\n                    \"id\": 14,\n                    \"name\": \"Version 2\",\n                    \"description\": \"Version 2\",\n                    \"activeFrom\": \"2024-06-21T15:13:17.35Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1.1,\n                    \"status\": \"Published\"\n                }\n            ]\n        },\n        {\n            \"id\": 8,\n            \"invoiceTypeCode\": 14,\n            \"description\": \"Self-billed Refund Note\",\n            \"activeFrom\": \"2024-05-02T10:34:11.1633333Z\",\n            \"activeTo\": null,\n            \"documentTypeVersions\": [\n                {\n                    \"id\": 15,\n                    \"name\": \"Version 1\",\n                    \"description\": \"Version 1\",\n                    \"activeFrom\": \"2024-04-26T17:47:49.18Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1,\n                    \"status\": \"Published\"\n                },\n                {\n                    \"id\": 16,\n                    \"name\": \"Version 2\",\n                    \"description\": \"Version 2\",\n                    \"activeFrom\": \"2024-06-21T15:13:17.3633333Z\",\n                    \"activeTo\": null,\n                    \"versionNumber\": 1.1,\n                    \"status\": \"Published\"\n                }\n            ]\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Document Type",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documenttypes/:id",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documenttypes",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://{{apiBaseUrl}}/api/v1.0/documenttypes/:id",
+                  "protocol": "https",
+                  "host": [
+                    "{{apiBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "documenttypes",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "2"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 04:00:04 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "570"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "0HN5J0FK9L0LI:00000001"
+                },
+                {
+                  "key": "requestTimeUTC",
+                  "value": "08/07/2024 04:00:04"
+                },
+                {
+                  "key": "responseProcessingTimeInTicks",
+                  "value": "4048"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "1999"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": 2,\n    \"invoiceTypeCode\": 2,\n    \"description\": \"Credit Note\",\n    \"activeFrom\": \"2024-05-02T10:34:11.15Z\",\n    \"activeTo\": null,\n    \"documentTypeVersions\": [\n        {\n            \"id\": 3,\n            \"name\": \"Version 1\",\n            \"description\": \"Version 1\",\n            \"activeFrom\": \"2024-04-26T17:47:49.2033333Z\",\n            \"activeTo\": null,\n            \"versionNumber\": 1,\n            \"status\": \"Published\"\n        },\n        {\n            \"id\": 4,\n            \"name\": \"Version 2\",\n            \"description\": \"Version 2\",\n            \"activeFrom\": \"2024-06-21T15:13:17.3133333Z\",\n            \"activeTo\": null,\n            \"versionNumber\": 1.1,\n            \"status\": \"Published\"\n        }\n    ],\n    \"workflowParameters\": [\n        {\n            \"id\": 2,\n            \"parameter\": \"Submission\",\n            \"value\": 80,\n            \"activeFrom\": \"2024-03-14T04:59:24.076Z\",\n            \"activeTo\": null\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Document Type Version",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documenttypes/:Id/versions/:vid",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documenttypes",
+                ":Id",
+                "versions",
+                ":vid"
+              ],
+              "variable": [
+                {
+                  "key": "Id",
+                  "value": "1"
+                },
+                {
+                  "key": "vid",
+                  "value": "1",
+                  "description": "Version number"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://{{apiBaseUrl}}/api/v1.0/documenttypes/:Id/versions/:vid",
+                  "protocol": "https",
+                  "host": [
+                    "{{apiBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "documenttypes",
+                    ":Id",
+                    "versions",
+                    ":vid"
+                  ],
+                  "variable": [
+                    {
+                      "key": "Id",
+                      "value": "1"
+                    },
+                    {
+                      "key": "vid",
+                      "value": "1",
+                      "description": "Version number"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 04:13:43 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "379"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "0HN5J0FDT6U3S:00000002"
+                },
+                {
+                  "key": "requestTimeUTC",
+                  "value": "08/07/2024 04:13:43"
+                },
+                {
+                  "key": "responseProcessingTimeInTicks",
+                  "value": "818272"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "2000"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"invoiceTypeCode\": \"01\",\n    \"name\": \"Version 1\",\n    \"description\": \"Version 1\",\n    \"versionNumber\": \"1.0\",\n    \"status\": \"Published\",\n    \"activeFrom\": \"2024-04-26T17:47:49.2Z\",\n    \"activeTo\": null,\n    \"jsonschema\": \"https://seapprdschemamyinvoisst.blob.core.windows.net/schemas/v1.0/json/UBL-Invoice-2.1.json\",\n    \"xmlschema\": \"https://seapprdschemamyinvoisst.blob.core.windows.net/schemas/v1.0/xml/UBL-Invoice-2.1.xsd\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Notifications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/notifications/taxpayer?dateFrom=&dateTo=&type=&language=&status=&channel=&pageNo=3&pageSize=1",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "notifications",
+                "taxpayer"
+              ],
+              "query": [
+                {
+                  "key": "dateFrom",
+                  "value": "",
+                  "description": "Optional: start date and time for notifications to retrieve based on the date sent\n"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "",
+                  "description": "Optional: end date and time for notifications to retrieve based on the date sent\n"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "Optional: type of notifications to retrieve specified as ID of the type. (Notification types to be discussed later)\n"
+                },
+                {
+                  "key": "language",
+                  "value": "",
+                  "description": "Optional: used to get notifications only if they were sent out in a specific language. Values: ms and en\n"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Optional: used to get notifications of certain status only, e.g., only those that were not delivered. Values: pending, batched, delivered, error\n"
+                },
+                {
+                  "key": "channel",
+                  "value": "",
+                  "description": "Optional: used to get notifications delivered over certain channel only. Values: email, push\n"
+                },
+                {
+                  "key": "pageNo",
+                  "value": "3",
+                  "description": "Optional: number of the page to retrieve. Typically this parameter value is derived from initial parameter less call when caller learns total amount of page of certain size\n"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "1",
+                  "description": "Optional: number of the packages to retrieve per page. Page size cannot exceed system configured maximum page size for this API\n"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://{{apiBaseUrl}}/api/v1.0/notifications/taxpayer?dateFrom=&dateTo=&type=&language=&status=&channel=&pageNo=3&pageSize=1",
+                  "protocol": "https",
+                  "host": [
+                    "{{apiBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "notifications",
+                    "taxpayer"
+                  ],
+                  "query": [
+                    {
+                      "key": "dateFrom",
+                      "value": "",
+                      "description": "Optional: start date and time for notifications to retrieve based on the date sent\n"
+                    },
+                    {
+                      "key": "dateTo",
+                      "value": "",
+                      "description": "Optional: end date and time for notifications to retrieve based on the date sent\n"
+                    },
+                    {
+                      "key": "type",
+                      "value": "",
+                      "description": "Optional: type of notifications to retrieve specified as ID of the type. (Notification types to be discussed later)\n"
+                    },
+                    {
+                      "key": "language",
+                      "value": "",
+                      "description": "Optional: used to get notifications only if they were sent out in a specific language. Values: ms and en\n"
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "Optional: used to get notifications of certain status only, e.g., only those that were not delivered. Values: pending, batched, delivered, error\n"
+                    },
+                    {
+                      "key": "channel",
+                      "value": "",
+                      "description": "Optional: used to get notifications delivered over certain channel only. Values: email, push\n"
+                    },
+                    {
+                      "key": "pageNo",
+                      "value": "3",
+                      "description": "Optional: number of the page to retrieve. Typically this parameter value is derived from initial parameter less call when caller learns total amount of page of certain size\n"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "1",
+                      "description": "Optional: number of the packages to retrieve per page. Page size cannot exceed system configured maximum page size for this API\n"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 04:27:19 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "698"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "258fc760-fc86-46b4-8096-aa4bdd3690dc"
+                },
+                {
+                  "key": "requestTimeUTC",
+                  "value": "08/07/2024 04:27:19"
+                },
+                {
+                  "key": "responseProcessingTimeInTicks",
+                  "value": "209"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "2000"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"result\": [\n        {\n            \"notificationId\": \"73DKLJHH78NJUHQ\",\n            \"receiverName\": null,\n            \"receiverType\": null,\n            \"creationDateTime\": \"0001-01-01T00:00:00Z\",\n            \"deliveredDateTime\": \"2015-02-13T14:23:00Z\",\n            \"receivedDateTime\": \"2015-02-13T14:20:00Z\",\n            \"messageData\": null,\n            \"typeId\": 34,\n            \"status\": \"delivered\",\n            \"typeName\": \"Invoice received\",\n            \"notificationDeliveryId\": null,\n            \"finalMessage\": \"Taxpayer 893838273 has received new documents\",\n            \"address\": \"test@test.com\",\n            \"channel\": \"email\",\n            \"documentUUID\": null,\n            \"detailsUrl\": null,\n            \"notificationSubject\": null,\n            \"metadata\": null,\n            \"isBacthed\": false,\n            \"language\": \"en\",\n            \"deliveryAttempts\": [\n                {\n                    \"attemptDateTime\": \"2015-02-13T14:20:00Z\",\n                    \"status\": \"delivered\",\n                    \"statusDetail\": null\n                }\n            ]\n        }\n    ],\n    \"metadata\": {\n        \"totalPages\": 1,\n        \"totalCount\": 1\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EInvoicing",
+      "item": [
+        {
+          "name": "Validate taxpayer TIN",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/taxpayer/validate/{tin}?idType=Business-registration-number&idValue=C897533070",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "taxpayer",
+                "validate",
+                "{tin}"
+              ],
+              "query": [
+                {
+                  "key": "idType",
+                  "value": "Business-registration-number",
+                  "description": "(NRIC, Passport number, Business registration number, army number)\n"
+                },
+                {
+                  "key": "idValue",
+                  "value": "C897533070"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "404 - Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://{{apiBaseUrl}}/api/v1.0/taxpayer/validate/{tin}?idType=NRIC&idValue=030117140080",
+                  "protocol": "https",
+                  "host": [
+                    "{{apiBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "taxpayer",
+                    "validate",
+                    "{tin}"
+                  ],
+                  "query": [
+                    {
+                      "key": "idType",
+                      "value": "NRIC",
+                      "description": "(NRIC, Passport number, Business registration number, army number)\n"
+                    },
+                    {
+                      "key": "idValue",
+                      "value": "030117140080"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 04:24:45 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/problem+json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "162"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "2000"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"type\": \"https://tools.ietf.org/html/rfc9110#section-15.5.5\",\n    \"title\": \"Not Found\",\n    \"status\": 404,\n    \"traceId\": \"00-1f4acc94eb0f851868043986ec347dd1-719abb90e88753d7-00\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Submit Documents",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"documents\": [\r\n        {\r\n            \"format\": \"XML\",\r\n            \"documentHash\": \"asdsa234322r32f23f3f32f32f\",\r\n            \"codeNumber\": \"INV12345\",\r\n            \"document\": \"PEludm9pY2UgeG1sbnM9InVybjpvYXNpczpuYW1lczpzcGVjaWZpY2F0aW9uOnVibDpzY2hlbWE6eHNkOkludm9pY2UtMiIKCXhtbG5zOmNhYz0idXJuOm9hc2lzOm5hbWVzOnNwZWNpZmljYXRpb246dWJsOnNjaGVtYTp4c2Q6Q29tbW9uQWdncmVnYXRlQ29tcG9uZW50cy0yIgoJeG1sbnM6Y2JjPSJ1cm46b2FzaXM6bmFtZXM6c3BlY2lmaWNhdGlvbjp1Ymw6c2NoZW1hOnhzZDpDb21tb25CYXNpY0NvbXBvbmVudHMtMiI+Cgk8Y2JjOklEPklOVjEyMzQ1PC9jYmM6SUQ+Cgk8Y2JjOklzc3VlRGF0ZT4yMDE3LTExLTI2PC9jYmM6SXNzdWVEYXRlPgoJPGNiYzpJc3N1ZVRpbWU+MTU6MzA6MDBaPC9jYmM6SXNzdWVUaW1lPgoJPGNiYzpJbnZvaWNlVHlwZUNvZGUgbGlzdFZlcnNpb25JRD0iMS4wIj4wMTwvY2JjOkludm9pY2VUeXBlQ29kZT4KCTxjYmM6RG9jdW1lbnRDdXJyZW5jeUNvZGU+TVlSPC9jYmM6RG9jdW1lbnRDdXJyZW5jeUNvZGU+Cgk8Y2FjOkludm9pY2VQZXJpb2Q+CgkJPGNiYzpTdGFydERhdGU+MjAxNy0xMS0yNjwvY2JjOlN0YXJ0RGF0ZT4KCQk8Y2JjOkVuZERhdGU+MjAxNy0xMS0zMDwvY2JjOkVuZERhdGU+CgkJPGNiYzpEZXNjcmlwdGlvbj5Nb250aGx5PC9jYmM6RGVzY3JpcHRpb24+Cgk8L2NhYzpJbnZvaWNlUGVyaW9kPgoJPGNhYzpCaWxsaW5nUmVmZXJlbmNlPgoJCTxjYWM6QWRkaXRpb25hbERvY3VtZW50UmVmZXJlbmNlPgoJCQk8Y2JjOklEPkUxMjM0NTY3ODkxMjwvY2JjOklEPgoJCTwvY2FjOkFkZGl0aW9uYWxEb2N1bWVudFJlZmVyZW5jZT4KCTwvY2FjOkJpbGxpbmdSZWZlcmVuY2U+Cgk8Y2FjOkFkZGl0aW9uYWxEb2N1bWVudFJlZmVyZW5jZT4KCQk8Y2JjOklEPkUxMjM0NTY3ODkxMjwvY2JjOklEPgoJCTxjYmM6RG9jdW1lbnRUeXBlPkN1c3RvbXNJbXBvcnRGb3JtPC9jYmM6RG9jdW1lbnRUeXBlPgoJPC9jYWM6QWRkaXRpb25hbERvY3VtZW50UmVmZXJlbmNlPgoJPGNhYzpBZGRpdGlvbmFsRG9jdW1lbnRSZWZlcmVuY2U+CgkJPGNiYzpJRD5BU0VBTi1BdXN0cmFsaWEtTmV3IFplYWxhbmQgRlRBIChBQU5aRlRBKTwvY2JjOklEPgoJCTxjYmM6RG9jdW1lbnRUeXBlPkZyZWVUcmFkZUFncmVlbWVudDwvY2JjOkRvY3VtZW50VHlwZT4KCQk8Y2JjOkRvY3VtZW50RGVzY3JpcHRpb24+U2FtcGxlIERlc2NyaXB0aW9uPC9jYmM6RG9jdW1lbnREZXNjcmlwdGlvbj4KCTwvY2FjOkFkZGl0aW9uYWxEb2N1bWVudFJlZmVyZW5jZT4KCTxjYWM6QWRkaXRpb25hbERvY3VtZW50UmVmZXJlbmNlPgoJCTxjYmM6SUQ+RTEyMzQ1Njc4OTEyPC9jYmM6SUQ+CgkJPGNiYzpEb2N1bWVudFR5cGU+SzI8L2NiYzpEb2N1bWVudFR5cGU+Cgk8L2NhYzpBZGRpdGlvbmFsRG9jdW1lbnRSZWZlcmVuY2U+Cgk8Y2FjOkFkZGl0aW9uYWxEb2N1bWVudFJlZmVyZW5jZT4KCQk8Y2JjOklEPkNJRjwvY2JjOklEPgoJPC9jYWM6QWRkaXRpb25hbERvY3VtZW50UmVmZXJlbmNlPgoJPGNhYzpBY2NvdW50aW5nU3VwcGxpZXJQYXJ0eT4KCQk8Y2JjOkFkZGl0aW9uYWxBY2NvdW50SUQgc2NoZW1lQWdlbmN5TmFtZT0iQ2VydEVYIj5DUFQtQ0NOLVctMjExMTExLUtMLTAwMDAwMjwvY2JjOkFkZGl0aW9uYWxBY2NvdW50SUQ+CgkJPGNhYzpQYXJ0eT4KCQkJPGNiYzpJbmR1c3RyeUNsYXNzaWZpY2F0aW9uQ29kZSBuYW1lPSJHcm93aW5nIG9mIG1haXplIj4wMTExMTwvY2JjOkluZHVzdHJ5Q2xhc3NpZmljYXRpb25Db2RlPgoJCQk8Y2FjOlBhcnR5SWRlbnRpZmljYXRpb24+CgkJCQk8Y2JjOklEIHNjaGVtZUlEPSJUSU4iPkMyNTg0NTYzMjIyPC9jYmM6SUQ+CgkJCTwvY2FjOlBhcnR5SWRlbnRpZmljYXRpb24+CgkJCTxjYWM6UGFydHlJZGVudGlmaWNhdGlvbj4KCQkJCTxjYmM6SUQgc2NoZW1lSUQ9IkJSTiI+MjAyMDAxMjM0NTY3PC9jYmM6SUQ+CgkJCTwvY2FjOlBhcnR5SWRlbnRpZmljYXRpb24+CgkJCTxjYWM6UG9zdGFsQWRkcmVzcz4KCQkJCTxjYmM6Q2l0eU5hbWU+S3VhbGEgTHVtcHVyPC9jYmM6Q2l0eU5hbWU+CgkJCQk8Y2JjOlBvc3RhbFpvbmU+NTA0ODA8L2NiYzpQb3N0YWxab25lPgoJCQkJPGNiYzpDb3VudHJ5U3ViZW50aXR5Q29kZT4xNDwvY2JjOkNvdW50cnlTdWJlbnRpdHlDb2RlPgoJCQkJPGNhYzpBZGRyZXNzTGluZT4KCQkJCQk8Y2JjOkxpbmU+TG90IDY2PC9jYmM6TGluZT4KCQkJCTwvY2FjOkFkZHJlc3NMaW5lPgoJCQkJPGNhYzpBZGRyZXNzTGluZT4KCQkJCQk8Y2JjOkxpbmU+QmFuZ3VuYW4gTWVyZGVrYTwvY2JjOkxpbmU+CgkJCQk8L2NhYzpBZGRyZXNzTGluZT4KCQkJCTxjYWM6QWRkcmVzc0xpbmU+CgkJCQkJPGNiYzpMaW5lPlBlcnNpYXJhbiBKYXlhPC9jYmM6TGluZT4KCQkJCTwvY2FjOkFkZHJlc3NMaW5lPgoJCQkJPGNhYzpDb3VudHJ5PgoJCQkJCTxjYmM6SWRlbnRpZmljYXRpb25Db2RlIGxpc3RJRD0iSVNPMzE2Ni0xIiBsaXN0QWdlbmN5SUQ9IjYiPk1ZUzwvY2JjOklkZW50aWZpY2F0aW9uQ29kZT4KCQkJCTwvY2FjOkNvdW50cnk+CgkJCTwvY2FjOlBvc3RhbEFkZHJlc3M+CgkJCTxjYWM6UGFydHlMZWdhbEVudGl0eT4KCQkJCTxjYmM6UmVnaXN0cmF0aW9uTmFtZT5BTVMgU2V0aWEgSmF5YSBTZG4uIEJoZC48L2NiYzpSZWdpc3RyYXRpb25OYW1lPgoJCQk8L2NhYzpQYXJ0eUxlZ2FsRW50aXR5PgoJCQk8Y2FjOkNvbnRhY3Q+CgkJCQk8Y2JjOlRlbGVwaG9uZT4rNjAtMTIzNDU2Nzg5PC9jYmM6VGVsZXBob25lPgoJCQkJPGNiYzpFbGVjdHJvbmljTWFpbD5nZW5lcmFsLmFtc0BzdXBwbGllci5jb208L2NiYzpFbGVjdHJvbmljTWFpbD4KCQkJPC9jYWM6Q29udGFjdD4KCQk8L2NhYzpQYXJ0eT4KCTwvY2FjOkFjY291bnRpbmdTdXBwbGllclBhcnR5PgoJPGNhYzpBY2NvdW50aW5nQ3VzdG9tZXJQYXJ0eT4KCQk8Y2FjOlBhcnR5PgoJCQk8Y2FjOlBhcnR5SWRlbnRpZmljYXRpb24+CgkJCQk8Y2JjOklEIHNjaGVtZUlEPSJUSU4iPkMyNTg0NTYzMjAwPC9jYmM6SUQ+CgkJCTwvY2FjOlBhcnR5SWRlbnRpZmljYXRpb24+CgkJCTxjYWM6UGFydHlJZGVudGlmaWNhdGlvbj4KCQkJCTxjYmM6SUQgc2NoZW1lSUQ9IkJSTiI+MjAxOTAxMjM0NTY3PC9jYmM6SUQ+CgkJCTwvY2FjOlBhcnR5SWRlbnRpZmljYXRpb24+CgkJCTxjYWM6UG9zdGFsQWRkcmVzcz4KCQkJCTxjYmM6Q2l0eU5hbWU+S3VhbGEgTHVtcHVyPC9jYmM6Q2l0eU5hbWU+CgkJCQk8Y2JjOlBvc3RhbFpvbmU+NTA0ODA8L2NiYzpQb3N0YWxab25lPgoJCQkJPGNiYzpDb3VudHJ5U3ViZW50aXR5Q29kZT4xNDwvY2JjOkNvdW50cnlTdWJlbnRpdHlDb2RlPgoJCQkJPGNhYzpBZGRyZXNzTGluZT4KCQkJCQk8Y2JjOkxpbmU+TG90IDY2PC9jYmM6TGluZT4KCQkJCTwvY2FjOkFkZHJlc3NMaW5lPgoJCQkJPGNhYzpBZGRyZXNzTGluZT4KCQkJCQk8Y2JjOkxpbmU+QmFuZ3VuYW4gTWVyZGVrYTwvY2JjOkxpbmU+CgkJCQk8L2NhYzpBZGRyZXNzTGluZT4KCQkJCTxjYWM6QWRkcmVzc0xpbmU+CgkJCQkJPGNiYzpMaW5lPlBlcnNpYXJhbiBKYXlhPC9jYmM6TGluZT4KCQkJCTwvY2FjOkFkZHJlc3NMaW5lPgoJCQkJPGNhYzpDb3VudHJ5PgoJCQkJCTxjYmM6SWRlbnRpZmljYXRpb25Db2RlIGxpc3RJRD0iSVNPMzE2Ni0xIiBsaXN0QWdlbmN5SUQ9IjYiPk1ZUzwvY2JjOklkZW50aWZpY2F0aW9uQ29kZT4KCQkJCTwvY2FjOkNvdW50cnk+CgkJCTwvY2FjOlBvc3RhbEFkZHJlc3M+CgkJCTxjYWM6UGFydHlMZWdhbEVudGl0eT4KCQkJCTxjYmM6UmVnaXN0cmF0aW9uTmFtZT5IZWJhdCBHcm91cDwvY2JjOlJlZ2lzdHJhdGlvbk5hbWU+CgkJCTwvY2FjOlBhcnR5TGVnYWxFbnRpdHk+CgkJCTxjYWM6Q29udGFjdD4KCQkJCTxjYmM6VGVsZXBob25lPis2MC0xMjM0NTY3ODk8L2NiYzpUZWxlcGhvbmU+CgkJCQk8Y2JjOkVsZWN0cm9uaWNNYWlsPm5hbWVAYnV5ZXIuY29tPC9jYmM6RWxlY3Ryb25pY01haWw+CgkJCTwvY2FjOkNvbnRhY3Q+CgkJPC9jYWM6UGFydHk+Cgk8L2NhYzpBY2NvdW50aW5nQ3VzdG9tZXJQYXJ0eT4KCTxjYWM6RGVsaXZlcnk+CgkJPGNhYzpEZWxpdmVyeVBhcnR5PgoJCQk8Y2FjOlBhcnR5SWRlbnRpZmljYXRpb24+CgkJCQk8Y2JjOklEIHNjaGVtZUlEPSJUSU4iPkMyNTg0NTYzMjAwPC9jYmM6SUQ+CgkJCTwvY2FjOlBhcnR5SWRlbnRpZmljYXRpb24+CgkJCTxjYWM6UGFydHlJZGVudGlmaWNhdGlvbj4KCQkJCTxjYmM6SUQgc2NoZW1lSUQ9IkJSTiI+MjAxOTAxMjM0NTY3PC9jYmM6SUQ+CgkJCTwvY2FjOlBhcnR5SWRlbnRpZmljYXRpb24+CgkJCTxjYWM6UG9zdGFsQWRkcmVzcz4KCQkJCTxjYmM6Q2l0eU5hbWU+S3VhbGEgTHVtcHVyPC9jYmM6Q2l0eU5hbWU+CgkJCQk8Y2JjOlBvc3RhbFpvbmU+NTA0ODA8L2NiYzpQb3N0YWxab25lPgoJCQkJPGNiYzpDb3VudHJ5U3ViZW50aXR5Q29kZT4xNDwvY2JjOkNvdW50cnlTdWJlbnRpdHlDb2RlPgoJCQkJPGNhYzpBZGRyZXNzTGluZT4KCQkJCQk8Y2JjOkxpbmU+TG90IDY2PC9jYmM6TGluZT4KCQkJCTwvY2FjOkFkZHJlc3NMaW5lPgoJCQkJPGNhYzpBZGRyZXNzTGluZT4KCQkJCQk8Y2JjOkxpbmU+QmFuZ3VuYW4gTWVyZGVrYTwvY2JjOkxpbmU+CgkJCQk8L2NhYzpBZGRyZXNzTGluZT4KCQkJCTxjYWM6QWRkcmVzc0xpbmU+CgkJCQkJPGNiYzpMaW5lPlBlcnNpYXJhbiBKYXlhPC9jYmM6TGluZT4KCQkJCTwvY2FjOkFkZHJlc3NMaW5lPgoJCQkJPGNhYzpDb3VudHJ5PgoJCQkJCTxjYmM6SWRlbnRpZmljYXRpb25Db2RlIGxpc3RJRD0iSVNPMzE2Ni0xIiBsaXN0QWdlbmN5SUQ9IjYiPk1ZUzwvY2JjOklkZW50aWZpY2F0aW9uQ29kZT4KCQkJCTwvY2FjOkNvdW50cnk+CgkJCTwvY2FjOlBvc3RhbEFkZHJlc3M+CgkJCTxjYWM6UGFydHlMZWdhbEVudGl0eT4KCQkJCTxjYmM6UmVnaXN0cmF0aW9uTmFtZT5HcmVlbnogU2RuLiBCaGQuPC9jYmM6UmVnaXN0cmF0aW9uTmFtZT4KCQkJPC9jYWM6UGFydHlMZWdhbEVudGl0eT4KCQk8L2NhYzpEZWxpdmVyeVBhcnR5PgoJCTxjYWM6U2hpcG1lbnQ+CgkJCTxjYmM6SUQ+MTIzNDwvY2JjOklEPgoJCQk8Y2FjOkZyZWlnaHRBbGxvd2FuY2VDaGFyZ2U+CgkJCQk8Y2JjOkNoYXJnZUluZGljYXRvcj50cnVlPC9jYmM6Q2hhcmdlSW5kaWNhdG9yPgoJCQkJPGNiYzpBbGxvd2FuY2VDaGFyZ2VSZWFzb24+U2VydmljZSBjaGFyZ2U8L2NiYzpBbGxvd2FuY2VDaGFyZ2VSZWFzb24+CgkJCQk8Y2JjOkFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjEwMDwvY2JjOkFtb3VudD4KCQkJPC9jYWM6RnJlaWdodEFsbG93YW5jZUNoYXJnZT4KCQk8L2NhYzpTaGlwbWVudD4KCTwvY2FjOkRlbGl2ZXJ5PgoJPGNhYzpQYXltZW50TWVhbnM+CgkJPGNiYzpQYXltZW50TWVhbnNDb2RlPjAxPC9jYmM6UGF5bWVudE1lYW5zQ29kZT4KCQk8Y2FjOlBheWVlRmluYW5jaWFsQWNjb3VudD4KCQkJPGNiYzpJRD4xMjM0NTY3ODkwMTIzPC9jYmM6SUQ+CgkJPC9jYWM6UGF5ZWVGaW5hbmNpYWxBY2NvdW50PgoJPC9jYWM6UGF5bWVudE1lYW5zPgoJPGNhYzpQYXltZW50VGVybXM+CgkJPGNiYzpOb3RlPlBheW1lbnQgbWV0aG9kIGlzIGNhc2g8L2NiYzpOb3RlPgoJPC9jYWM6UGF5bWVudFRlcm1zPgoJPGNhYzpQcmVwYWlkUGF5bWVudD4KCQk8Y2JjOklEPkUxMjM0NTY3ODkxMjwvY2JjOklEPgoJCTxjYmM6UGFpZEFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjEuMDA8L2NiYzpQYWlkQW1vdW50PgoJCTxjYmM6UGFpZERhdGU+MjAwMC0wMS0wMTwvY2JjOlBhaWREYXRlPgoJCTxjYmM6UGFpZFRpbWU+MTI6MDA6MDBaPC9jYmM6UGFpZFRpbWU+Cgk8L2NhYzpQcmVwYWlkUGF5bWVudD4KCTxjYWM6QWxsb3dhbmNlQ2hhcmdlPgoJCTxjYmM6Q2hhcmdlSW5kaWNhdG9yPmZhbHNlPC9jYmM6Q2hhcmdlSW5kaWNhdG9yPgoJCTxjYmM6QWxsb3dhbmNlQ2hhcmdlUmVhc29uPlNhbXBsZSBEZXNjcmlwdGlvbjwvY2JjOkFsbG93YW5jZUNoYXJnZVJlYXNvbj4KCQk8Y2JjOkFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjEwMDwvY2JjOkFtb3VudD4KCTwvY2FjOkFsbG93YW5jZUNoYXJnZT4KCTxjYWM6QWxsb3dhbmNlQ2hhcmdlPgoJCTxjYmM6Q2hhcmdlSW5kaWNhdG9yPnRydWU8L2NiYzpDaGFyZ2VJbmRpY2F0b3I+CgkJPGNiYzpBbGxvd2FuY2VDaGFyZ2VSZWFzb24+U2VydmljZSBjaGFyZ2U8L2NiYzpBbGxvd2FuY2VDaGFyZ2VSZWFzb24+CgkJPGNiYzpBbW91bnQgY3VycmVuY3lJRD0iTVlSIj4xMDA8L2NiYzpBbW91bnQ+Cgk8L2NhYzpBbGxvd2FuY2VDaGFyZ2U+Cgk8Y2FjOlRheFRvdGFsPgoJCTxjYmM6VGF4QW1vdW50IGN1cnJlbmN5SUQ9Ik1ZUiI+ODcuNjM8L2NiYzpUYXhBbW91bnQ+CgkJPGNhYzpUYXhTdWJ0b3RhbD4KCQkJPGNiYzpUYXhhYmxlQW1vdW50IGN1cnJlbmN5SUQ9Ik1ZUiI+ODcuNjM8L2NiYzpUYXhhYmxlQW1vdW50PgoJCQk8Y2JjOlRheEFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjg3LjYzPC9jYmM6VGF4QW1vdW50PgoJCQk8Y2FjOlRheENhdGVnb3J5PgoJCQkJPGNiYzpJRD4wMTwvY2JjOklEPgoJCQkJPGNhYzpUYXhTY2hlbWU+CgkJCQkJPGNiYzpJRCBzY2hlbWVJRD0iVU4vRUNFIDUxNTMiIHNjaGVtZUFnZW5jeUlEPSI2Ij5PVEg8L2NiYzpJRD4KCQkJCTwvY2FjOlRheFNjaGVtZT4KCQkJPC9jYWM6VGF4Q2F0ZWdvcnk+CgkJPC9jYWM6VGF4U3VidG90YWw+Cgk8L2NhYzpUYXhUb3RhbD4KCTxjYWM6TGVnYWxNb25ldGFyeVRvdGFsPgoJCTxjYmM6TGluZUV4dGVuc2lvbkFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjE0MzYuNTA8L2NiYzpMaW5lRXh0ZW5zaW9uQW1vdW50PgoJCTxjYmM6VGF4RXhjbHVzaXZlQW1vdW50IGN1cnJlbmN5SUQ9Ik1ZUiI+MTQzNi41MDwvY2JjOlRheEV4Y2x1c2l2ZUFtb3VudD4KCQk8Y2JjOlRheEluY2x1c2l2ZUFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjE0MzYuNTA8L2NiYzpUYXhJbmNsdXNpdmVBbW91bnQ+CgkJPGNiYzpBbGxvd2FuY2VUb3RhbEFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjE0MzYuNTA8L2NiYzpBbGxvd2FuY2VUb3RhbEFtb3VudD4KCQk8Y2JjOkNoYXJnZVRvdGFsQW1vdW50IGN1cnJlbmN5SUQ9Ik1ZUiI+MTQzNi41MDwvY2JjOkNoYXJnZVRvdGFsQW1vdW50PgoJCTxjYmM6UGF5YWJsZVJvdW5kaW5nQW1vdW50IGN1cnJlbmN5SUQ9Ik1ZUiI+MC4zMDwvY2JjOlBheWFibGVSb3VuZGluZ0Ftb3VudD4KCQk8Y2JjOlBheWFibGVBbW91bnQgY3VycmVuY3lJRD0iTVlSIj4xNDM2LjUwPC9jYmM6UGF5YWJsZUFtb3VudD4KCTwvY2FjOkxlZ2FsTW9uZXRhcnlUb3RhbD4KCTxjYWM6SW52b2ljZUxpbmU+CgkJPGNiYzpJRD4xMjM0PC9jYmM6SUQ+CgkJPGNiYzpJbnZvaWNlZFF1YW50aXR5IHVuaXRDb2RlPSJDNjIiPjE8L2NiYzpJbnZvaWNlZFF1YW50aXR5PgoJCTxjYmM6TGluZUV4dGVuc2lvbkFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjE0MzYuNTA8L2NiYzpMaW5lRXh0ZW5zaW9uQW1vdW50PgoJCTxjYWM6QWxsb3dhbmNlQ2hhcmdlPgoJCQk8Y2JjOkNoYXJnZUluZGljYXRvcj5mYWxzZTwvY2JjOkNoYXJnZUluZGljYXRvcj4KCQkJPGNiYzpBbGxvd2FuY2VDaGFyZ2VSZWFzb24+U2FtcGxlIERlc2NyaXB0aW9uPC9jYmM6QWxsb3dhbmNlQ2hhcmdlUmVhc29uPgoJCQk8Y2JjOk11bHRpcGxpZXJGYWN0b3JOdW1lcmljPjAuMTU8L2NiYzpNdWx0aXBsaWVyRmFjdG9yTnVtZXJpYz4KCQkJPGNiYzpBbW91bnQgY3VycmVuY3lJRD0iTVlSIj4xMDA8L2NiYzpBbW91bnQ+CgkJPC9jYWM6QWxsb3dhbmNlQ2hhcmdlPgoJCTxjYWM6QWxsb3dhbmNlQ2hhcmdlPgoJCQk8Y2JjOkNoYXJnZUluZGljYXRvcj50cnVlPC9jYmM6Q2hhcmdlSW5kaWNhdG9yPgoJCQk8Y2JjOkFsbG93YW5jZUNoYXJnZVJlYXNvbj5TYW1wbGUgRGVzY3JpcHRpb248L2NiYzpBbGxvd2FuY2VDaGFyZ2VSZWFzb24+CgkJCTxjYmM6TXVsdGlwbGllckZhY3Rvck51bWVyaWM+MC4xMDwvY2JjOk11bHRpcGxpZXJGYWN0b3JOdW1lcmljPgoJCQk8Y2JjOkFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjEwMDwvY2JjOkFtb3VudD4KCQk8L2NhYzpBbGxvd2FuY2VDaGFyZ2U+CgkJPGNhYzpUYXhUb3RhbD4KCQkJPGNiYzpUYXhBbW91bnQgY3VycmVuY3lJRD0iTVlSIj4xNDYwLjUwPC9jYmM6VGF4QW1vdW50PgoJCQk8Y2FjOlRheFN1YnRvdGFsPgoJCQkJPGNiYzpUYXhhYmxlQW1vdW50IGN1cnJlbmN5SUQ9Ik1ZUiI+MTQ2MC41MDwvY2JjOlRheGFibGVBbW91bnQ+CgkJCQk8Y2JjOlRheEFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjA8L2NiYzpUYXhBbW91bnQ+CgkJCQk8Y2FjOlRheENhdGVnb3J5PgoJCQkJCTxjYmM6SUQ+RTwvY2JjOklEPgoJCQkJCTxjYmM6UGVyY2VudD42LjAwPC9jYmM6UGVyY2VudD4KCQkJCQk8Y2JjOlRheEV4ZW1wdGlvblJlYXNvbj5FeGVtcHQgTmV3IE1lYW5zIG9mIFRyYW5zcG9ydDwvY2JjOlRheEV4ZW1wdGlvblJlYXNvbj4KCQkJCQk8Y2FjOlRheFNjaGVtZT4KCQkJCQkJPGNiYzpJRCBzY2hlbWVJRD0iVU4vRUNFIDUxNTMiIHNjaGVtZUFnZW5jeUlEPSI2Ij5PVEg8L2NiYzpJRD4KCQkJCQk8L2NhYzpUYXhTY2hlbWU+CgkJCQk8L2NhYzpUYXhDYXRlZ29yeT4KCQkJPC9jYWM6VGF4U3VidG90YWw+CgkJPC9jYWM6VGF4VG90YWw+CgkJPGNhYzpJdGVtPgoJCQk8Y2JjOkRlc2NyaXB0aW9uPkxhcHRvcCBQZXJpcGhlcmFsczwvY2JjOkRlc2NyaXB0aW9uPgoJCQk8Y2FjOk9yaWdpbkNvdW50cnk+CgkJCQk8Y2JjOklkZW50aWZpY2F0aW9uQ29kZT5NWVM8L2NiYzpJZGVudGlmaWNhdGlvbkNvZGU+CgkJCTwvY2FjOk9yaWdpbkNvdW50cnk+CgkJCTxjYWM6Q29tbW9kaXR5Q2xhc3NpZmljYXRpb24+CgkJCQk8Y2JjOkl0ZW1DbGFzc2lmaWNhdGlvbkNvZGUgbGlzdElEPSJQVEMiPjEyMzQ0MzIxPC9jYmM6SXRlbUNsYXNzaWZpY2F0aW9uQ29kZT4KCQkJPC9jYWM6Q29tbW9kaXR5Q2xhc3NpZmljYXRpb24+CgkJCTxjYWM6Q29tbW9kaXR5Q2xhc3NpZmljYXRpb24+CgkJCQk8Y2JjOkl0ZW1DbGFzc2lmaWNhdGlvbkNvZGUgbGlzdElEPSJDTEFTUyI+MTIzNDQzMjE8L2NiYzpJdGVtQ2xhc3NpZmljYXRpb25Db2RlPgoJCQk8L2NhYzpDb21tb2RpdHlDbGFzc2lmaWNhdGlvbj4KCQk8L2NhYzpJdGVtPgoJCTxjYWM6UHJpY2U+CgkJCTxjYmM6UHJpY2VBbW91bnQgY3VycmVuY3lJRD0iTVlSIj4xNzwvY2JjOlByaWNlQW1vdW50PgoJCTwvY2FjOlByaWNlPgoJCTxjYWM6SXRlbVByaWNlRXh0ZW5zaW9uPgoJCQk8Y2JjOkFtb3VudCBjdXJyZW5jeUlEPSJNWVIiPjEwMDwvY2JjOkFtb3VudD4KCQk8L2NhYzpJdGVtUHJpY2VFeHRlbnNpb24+Cgk8L2NhYzpJbnZvaWNlTGluZT4KPC9JbnZvaWNlPg==\"\r\n        }\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documentsubmissions",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documentsubmissions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Document",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\t\"status\":\"cancelled\",\r\n\t\"reason\":\"some reason for cancelled document\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documents/state/:uuid/state",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documents",
+                "state",
+                ":uuid",
+                "state"
+              ],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject Document",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\t\"status\":\"rejected\",\r\n\t\"reason\":\"some reason for rejected document\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documents/state/:uuid/state",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documents",
+                "state",
+                ":uuid",
+                "state"
+              ],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": ""
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recent Documents",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documents/recent?pageNo=1&pageSize=5&submissionDateFrom=&issueDateFrom=&issueDateTo=&direction=&status=Invalid&receiverIdType=&receiverId=&receiverTin=&issuerTin=&issuerIdType=&issuerId=",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documents",
+                "recent"
+              ],
+              "query": [
+                {
+                  "key": "pageNo",
+                  "value": "1",
+                  "description": "Optional: number of the page to retrieve. Typically this parameter value is derived from initial parameter less call when caller learns total amount of page of certain size\n"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "5",
+                  "description": "Optional: number of the documents to retrieve per page. Page size cannot exceed system configured maximum page size for this API\n"
+                },
+                {
+                  "key": "submissionDateFrom",
+                  "value": "",
+                  "description": "Optional: The start date and time when the document was submitted to the eInvoicing API, Time to be supplied in UTC timezone. Mandatory when ‘submissionDateTo’ is provided\n"
+                },
+                {
+                  "key": "issueDateFrom",
+                  "value": "",
+                  "description": "Optional: The start date and time when the document was issued. Mandatory when ‘issueDateTo’ is provided\n"
+                },
+                {
+                  "key": "issueDateTo",
+                  "value": "",
+                  "description": "Optional: The end date and time when the document was issued. Mandatory when ‘issueDateFrom’ is provided\n"
+                },
+                {
+                  "key": "direction",
+                  "value": "",
+                  "description": "Optional: direction of the document. Possible values: (‘Sent’, ‘Received’)\n"
+                },
+                {
+                  "key": "status",
+                  "value": "Invalid",
+                  "description": "Optional: status of the document. Possible values: (‘Valid’, ‘Invalid’, ‘Cancelled’, ‘Submitted’)\n"
+                },
+                {
+                  "key": "receiverIdType",
+                  "value": "",
+                  "description": "Optional: Document recipient identifier type. Only can be used when ‘Direction’ filter is set to Sent. Possible values: (BRN, PASSPORT, NRIC, ARMY) This is mandatory in case the receiverId is provided\n"
+                },
+                {
+                  "key": "receiverId",
+                  "value": "",
+                  "description": "Optional: Document recipient identifier. Only can be used when ‘Direction’ filter is set to Sent. Possible values: (Business registration number, Passport Number, National ID(NRIC), Army ID)\n"
+                },
+                {
+                  "key": "receiverTin",
+                  "value": "",
+                  "description": "Optional: Document recipient TIN. Only can be used when ‘Direction’ filter is set to Sent. \n"
+                },
+                {
+                  "key": "issuerTin",
+                  "value": "",
+                  "description": "Optional: Document issuer identifier. Only can be used when ‘Direction’ filter is set to Received.\n"
+                },
+                {
+                  "key": "issuerIdType",
+                  "value": "",
+                  "description": "Optional: Document issuer identifier type. Only can be used when ‘Direction’ filter is set to Received. Possible values: (BRN, PASSPORT, NRIC, ARMY) This is mandatory in case the issuerId is provided"
+                },
+                {
+                  "key": "issuerId",
+                  "value": "",
+                  "description": "Optional: Document issuer identifier. Only can be used when ‘Direction’ filter is set to Received. Possible values: (Business registration number, National ID(IC), Passport Number, Army ID)"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://{{apiBaseUrl}}/api/v1.0/documents/recent?pageNo=1&pageSize=1&submissionDateFrom=&issueDateFrom=&issueDateTo=&direction=&status=&receiverIdType=&receiverId=&receiverTin=&issuerTin=&issuerIdType=&issuerId=",
+                  "protocol": "https",
+                  "host": [
+                    "{{apiBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "documents",
+                    "recent"
+                  ],
+                  "query": [
+                    {
+                      "key": "pageNo",
+                      "value": "1",
+                      "description": "Optional: number of the page to retrieve. Typically this parameter value is derived from initial parameter less call when caller learns total amount of page of certain size\n"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "1",
+                      "description": "Optional: number of the documents to retrieve per page. Page size cannot exceed system configured maximum page size for this API\n"
+                    },
+                    {
+                      "key": "submissionDateFrom",
+                      "value": "",
+                      "description": "Optional: The start date and time when the document was submitted to the eInvoicing API, Time to be supplied in UTC timezone. Mandatory when ‘submissionDateTo’ is provided\n"
+                    },
+                    {
+                      "key": "issueDateFrom",
+                      "value": "",
+                      "description": "Optional: The start date and time when the document was issued. Mandatory when ‘issueDateTo’ is provided\n"
+                    },
+                    {
+                      "key": "issueDateTo",
+                      "value": "",
+                      "description": "Optional: The end date and time when the document was issued. Mandatory when ‘issueDateFrom’ is provided\n"
+                    },
+                    {
+                      "key": "direction",
+                      "value": "",
+                      "description": "Optional: direction of the document. Possible values: (‘Sent’, ‘Received’)\n"
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "Optional: status of the document. Possible values: (‘Valid’, ‘Invalid’, ‘Cancelled’, ‘Submitted’)\n"
+                    },
+                    {
+                      "key": "receiverIdType",
+                      "value": "",
+                      "description": "Optional: Document recipient identifier type. Only can be used when ‘Direction’ filter is set to Sent. Possible values: (BRN, PASSPORT, NRIC, ARMY) This is mandatory in case the receiverId is provided\n"
+                    },
+                    {
+                      "key": "receiverId",
+                      "value": "",
+                      "description": "Optional: Document recipient identifier. Only can be used when ‘Direction’ filter is set to Sent. Possible values: (Business registration number, Passport Number, National ID(NRIC), Army ID)\n"
+                    },
+                    {
+                      "key": "receiverTin",
+                      "value": "",
+                      "description": "Optional: Document recipient TIN. Only can be used when ‘Direction’ filter is set to Sent. \n"
+                    },
+                    {
+                      "key": "issuerTin",
+                      "value": "",
+                      "description": "Optional: Document issuer identifier. Only can be used when ‘Direction’ filter is set to Received.\n"
+                    },
+                    {
+                      "key": "issuerIdType",
+                      "value": "",
+                      "description": "Optional: Document issuer identifier type. Only can be used when ‘Direction’ filter is set to Received. Possible values: (BRN, PASSPORT, NRIC, ARMY) This is mandatory in case the issuerId is provided"
+                    },
+                    {
+                      "key": "issuerId",
+                      "value": "",
+                      "description": "Optional: Document issuer identifier. Only can be used when ‘Direction’ filter is set to Received. Possible values: (Business registration number, National ID(IC), Passport Number, Army ID)"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 04:22:36 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "897"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "0HN5M78IRPH82:0000000C"
+                },
+                {
+                  "key": "requestTimeUTC",
+                  "value": "08/07/2024 04:22:36"
+                },
+                {
+                  "key": "responseProcessingTimeInTicks",
+                  "value": "3357381"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "2000"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"result\": [\n        {\n            \"uuid\": \"80ZSTX7QR050FHE2GBFWDN4J10\",\n            \"submissionUid\": \"W7RSGMPDKJVBZYZ4GBFWDN4J10\",\n            \"longId\": \"\",\n            \"internalId\": \"only20240807005\",\n            \"typeName\": \"Self-billed Invoice\",\n            \"typeVersionName\": \"1.0\",\n            \"supplierTIN\": \"EI00000000020\",\n            \"supplierName\": \"AMS Setia Jaya Sdn. Bhd.\",\n            \"receiverTIN\": \"IG4615741070\",\n            \"issuerTIN\": \"C26812690090\",\n            \"receiverName\": \"AMS Setia Jaya Sdn. Bhd.\",\n            \"dateTimeIssued\": \"2024-08-05T00:00:00Z\",\n            \"dateTimeReceived\": \"2024-08-07T03:24:53.4870264Z\",\n            \"totalSales\": 0,\n            \"status\": \"Invalid\",\n            \"submissionChannel\": \"IntermediaryERP\",\n            \"intermediaryName\": \"MyInvoice2U e-invoicing middleware solution\",\n            \"intermediaryTIN\": \"C5868613040\",\n            \"cancelDateTime\": null,\n            \"rejectRequestDateTime\": null,\n            \"buyerName\": \"1NetSoft Sdn. Bhd.\",\n            \"buyerTIN\": \"C26812690090\",\n            \"receiverID\": \"690506085189\",\n            \"receiverIDType\": \"NRIC\",\n            \"issuerID\": \"202101025835\",\n            \"issuerIDType\": \"BRN\",\n            \"publicUrl\": \"\"\n        }\n    ],\n    \"metadata\": {\n        \"totalPages\": 239,\n        \"totalCount\": 239\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Submission",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documentsubmissions/:submissionUid",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documentsubmissions",
+                ":submissionUid"
+              ],
+              "variable": [
+                {
+                  "key": "submissionUid",
+                  "value": "W7RSGMPDKJVBZYZ4GBFWDN4J10",
+                  "description": "Unique document submission ID in eInvoicing"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://{{apiBaseUrl}}/api/v1.0/documentsubmissions/:submissionUid",
+                  "protocol": "https",
+                  "host": [
+                    "{{apiBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "documentsubmissions",
+                    ":submissionUid"
+                  ],
+                  "variable": [
+                    {
+                      "key": "submissionUid",
+                      "value": "W7RSGMPDKJVBZYZ4GBFWDN4J10",
+                      "description": "Unique document submission ID in eInvoicing"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 06:31:28 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "859"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "0HN5L8D5S7MPS:000000F3"
+                },
+                {
+                  "key": "requestTimeUTC",
+                  "value": "08/07/2024 06:31:28"
+                },
+                {
+                  "key": "responseProcessingTimeInTicks",
+                  "value": "79710"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "2000"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"submissionUid\": \"W7RSGMPDKJVBZYZ4GBFWDN4J10\",\n    \"documentCount\": 1,\n    \"dateTimeReceived\": \"2024-08-07T03:24:53Z\",\n    \"overallStatus\": \"Invalid\",\n    \"documentSummary\": [\n        {\n            \"uuid\": \"80ZSTX7QR050FHE2GBFWDN4J10\",\n            \"submissionUid\": \"W7RSGMPDKJVBZYZ4GBFWDN4J10\",\n            \"longId\": \"\",\n            \"internalId\": \"only20240807005\",\n            \"typeName\": \"Self-billed Invoice\",\n            \"typeVersionName\": \"Version 1\",\n            \"issuerTin\": \"C26812690090\",\n            \"issuerName\": \"1NetSoft Sdn. Bhd.\",\n            \"receiverId\": \"IG4615741070\",\n            \"receiverName\": \"AMS Setia Jaya Sdn. Bhd.\",\n            \"dateTimeIssued\": \"2024-08-05T00:00:00Z\",\n            \"dateTimeReceived\": \"2024-08-07T03:24:53Z\",\n            \"dateTimeValidated\": \"2024-08-07T03:24:55Z\",\n            \"totalPayableAmount\": 0,\n            \"totalExcludingTax\": 59.95,\n            \"totalDiscount\": 0,\n            \"totalNetAmount\": 59.95,\n            \"status\": \"Invalid\",\n            \"cancelDateTime\": null,\n            \"rejectRequestDateTime\": null,\n            \"documentStatusReason\": null,\n            \"createdByUserId\": \"C26812690090:1203fd02-6bf7-4801-94a6-f0b3a23a7f98\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Document (contents)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documents/:documentUUID/raw",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documents",
+                ":documentUUID",
+                "raw"
+              ],
+              "variable": [
+                {
+                  "key": "documentUUID",
+                  "value": "PWWJJK85BWRCV9GXGNSVPK4J10",
+                  "description": "Unique ID of the document to retrieve."
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Document Details (& validations details)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documents/:uuid/details",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documents",
+                ":uuid",
+                "details"
+              ],
+              "variable": [
+                {
+                  "key": "uuid",
+                  "value": "PWWJJK85BWRCV9GXGNSVPK4J10",
+                  "description": "Unique ID of the document to retrieve."
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://{{apiBaseUrl}}/api/v1.0/documents/:uuid/details",
+                  "protocol": "https",
+                  "host": [
+                    "{{apiBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "documents",
+                    ":uuid",
+                    "details"
+                  ],
+                  "variable": [
+                    {
+                      "key": "uuid",
+                      "value": "PWWJJK85BWRCV9GXGNSVPK4J10",
+                      "description": "Unique ID of the document to retrieve."
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 04:12:42 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "1096"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "0HN5J0F638NE0:0000000A"
+                },
+                {
+                  "key": "requestTimeUTC",
+                  "value": "08/07/2024 04:12:42"
+                },
+                {
+                  "key": "responseProcessingTimeInTicks",
+                  "value": "76425"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "2000"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"uuid\": \"PWWJJK85BWRCV9GXGNSVPK4J10\",\n    \"submissionUid\": \"ZKZ3JZ2WA9GVYS24GNSVPK4J10\",\n    \"longId\": \"SDVPSJ4XX5PD3DPZGNSVPK4J10Ar5GSy1722943399\",\n    \"typeName\": \"Credit Note\",\n    \"typeVersionName\": \"Version 1\",\n    \"issuerTin\": \"C26812690090\",\n    \"issuerName\": \"1NETSOFT SDN. BHD.\",\n    \"receiverId\": \"IG4615741070\",\n    \"receiverName\": \"w\",\n    \"dateTimeReceived\": \"2024-08-06T11:23:19Z\",\n    \"dateTimeValidated\": \"2024-08-06T11:23:22Z\",\n    \"totalExcludingTax\": 7.79,\n    \"totalDiscount\": 0,\n    \"totalNetAmount\": 7.79,\n    \"totalPayableAmount\": 7.8,\n    \"status\": \"Valid\",\n    \"createdByUserId\": \"C26812690090:1203fd02-6bf7-4801-94a6-f0b3a23a7f98\",\n    \"documentStatusReason\": null,\n    \"cancelDateTime\": null,\n    \"rejectRequestDateTime\": null,\n    \"validationResults\": {\n        \"status\": \"Valid\",\n        \"validationSteps\": [\n            {\n                \"status\": \"Valid\",\n                \"name\": \"Step03-Duplicated Submission Validator\"\n            },\n            {\n                \"status\": \"Valid\",\n                \"name\": \"Step-07. Code Field Validator\"\n            },\n            {\n                \"status\": \"Valid\",\n                \"name\": \"Step14-Taxpayer Profile Validator\"\n            },\n            {\n                \"status\": \"Valid\",\n                \"name\": \"Step 19-Document References Validator\"\n            },\n            {\n                \"status\": \"Valid\",\n                \"name\": \"Step 20-Document Currency Validator\"\n            }\n        ]\n    },\n    \"internalId\": \"AMJN038R1A-080604Cre01\",\n    \"dateTimeIssued\": \"2024-08-06T11:23:05Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Search Documents",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{generatedAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://{{apiBaseUrl}}/api/v1.0/documents/search?pageSize=1",
+              "protocol": "https",
+              "host": [
+                "{{apiBaseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1.0",
+                "documents",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "submissionDateFrom",
+                  "value": "",
+                  "description": "Optional: The start date and time when the document was submitted to the eInvoicing API, Time to be supplied in UTC timezone. Mandatory when ‘submissionDateTo’ is provided or issueDate filters are not used",
+                  "disabled": true
+                },
+                {
+                  "key": "submissionDateTo",
+                  "value": "",
+                  "description": "Optional: The end date and time when the document was submitted to the eInvoicing API, Time to be supplied in UTC timezone. Mandatory when ‘submissionDateFrom’ is provided or issueDate filters are not used\n",
+                  "disabled": true
+                },
+                {
+                  "key": "continuationToken",
+                  "value": "",
+                  "description": "Optional: Token provided to navigate to the next page. Must be omitted or use an empty string when requesting the first page.\n",
+                  "disabled": true
+                },
+                {
+                  "key": "pageSize",
+                  "value": "1",
+                  "description": "Optional: number of the documents to retrieve per page. Page size cannot exceed system configured maximum page size for this API. Default is 100\n"
+                },
+                {
+                  "key": "issueDateFrom",
+                  "value": "",
+                  "description": "Optional: The start date and time when the document was issued. Mandatory when ‘issueDateTo’ is provided or submissionDate filters are not used\n",
+                  "disabled": true
+                },
+                {
+                  "key": "issueDateTo",
+                  "value": "",
+                  "description": "Optional: The end date and time when the document was issued. Mandatory when ‘issueDateFrom’ is provided or submissionDate filters are not used\n",
+                  "disabled": true
+                },
+                {
+                  "key": "direction",
+                  "value": "",
+                  "description": "Optional: direction of the document. Possible values: (‘Sent’, ‘Received’). When not provided sent and received documents are retrieved.\n",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Optional: status of the document. Possible values: (‘Valid’, ‘Invalid’, ‘Cancelled’, ‘Submitted’)\n",
+                  "disabled": true
+                },
+                {
+                  "key": "documentType",
+                  "value": "",
+                  "description": "Optional: Unique name of the document type.\n",
+                  "disabled": true
+                },
+                {
+                  "key": "receiverId",
+                  "value": "",
+                  "description": "Optional: Document recipient identifier. Only can be used when ‘Direction’ filter is set to Sent. Possible values: (Business registration number, Passport Number, National ID)\n",
+                  "disabled": true
+                },
+                {
+                  "key": "receiverIdType",
+                  "value": "",
+                  "description": "Optional: Document recipient identifier type. Only can be used when ‘Direction’ filter is set to Sent. Possible values: (BRN, PASSPORT, NRIC, ARMY) This is mandatory in case the receiverId is provided\n",
+                  "disabled": true
+                },
+                {
+                  "key": "issuerTin",
+                  "value": "",
+                  "description": "Optional: Document issuer identifier. Only can be used when ‘Direction’ filter is set to Received.",
+                  "disabled": true
+                },
+                {
+                  "key": "receiverTin",
+                  "value": "",
+                  "description": "Optional: Document receiver identifier. Only can be used when ‘Direction’ filter is set to Received.",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://{{apiBaseUrl}}/api/v1.0/documents/search?pageSize=1",
+                  "protocol": "https",
+                  "host": [
+                    "{{apiBaseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1.0",
+                    "documents",
+                    "search"
+                  ],
+                  "query": [
+                    {
+                      "key": "submissionDateFrom",
+                      "value": "",
+                      "description": "Optional: The start date and time when the document was submitted to the eInvoicing API, Time to be supplied in UTC timezone. Mandatory when ‘submissionDateTo’ is provided or issueDate filters are not used",
+                      "disabled": true
+                    },
+                    {
+                      "key": "submissionDateTo",
+                      "value": "",
+                      "description": "Optional: The end date and time when the document was submitted to the eInvoicing API, Time to be supplied in UTC timezone. Mandatory when ‘submissionDateFrom’ is provided or issueDate filters are not used\n",
+                      "disabled": true
+                    },
+                    {
+                      "key": "continuationToken",
+                      "value": "",
+                      "description": "Optional: Token provided to navigate to the next page. Must be omitted or use an empty string when requesting the first page.\n",
+                      "disabled": true
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "1",
+                      "description": "Optional: number of the documents to retrieve per page. Page size cannot exceed system configured maximum page size for this API. Default is 100\n"
+                    },
+                    {
+                      "key": "issueDateFrom",
+                      "value": "",
+                      "description": "Optional: The start date and time when the document was issued. Mandatory when ‘issueDateTo’ is provided or submissionDate filters are not used\n",
+                      "disabled": true
+                    },
+                    {
+                      "key": "issueDateTo",
+                      "value": "",
+                      "description": "Optional: The end date and time when the document was issued. Mandatory when ‘issueDateFrom’ is provided or submissionDate filters are not used\n",
+                      "disabled": true
+                    },
+                    {
+                      "key": "direction",
+                      "value": "",
+                      "description": "Optional: direction of the document. Possible values: (‘Sent’, ‘Received’). When not provided sent and received documents are retrieved.\n",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "Optional: status of the document. Possible values: (‘Valid’, ‘Invalid’, ‘Cancelled’, ‘Submitted’)\n",
+                      "disabled": true
+                    },
+                    {
+                      "key": "documentType",
+                      "value": "",
+                      "description": "Optional: Unique name of the document type.\n",
+                      "disabled": true
+                    },
+                    {
+                      "key": "receiverId",
+                      "value": "",
+                      "description": "Optional: Document recipient identifier. Only can be used when ‘Direction’ filter is set to Sent. Possible values: (Business registration number, Passport Number, National ID)\n",
+                      "disabled": true
+                    },
+                    {
+                      "key": "receiverIdType",
+                      "value": "",
+                      "description": "Optional: Document recipient identifier type. Only can be used when ‘Direction’ filter is set to Sent. Possible values: (BRN, PASSPORT, NRIC, ARMY) This is mandatory in case the receiverId is provided\n",
+                      "disabled": true
+                    },
+                    {
+                      "key": "issuerTin",
+                      "value": "",
+                      "description": "Optional: Document issuer identifier. Only can be used when ‘Direction’ filter is set to Received.",
+                      "disabled": true
+                    },
+                    {
+                      "key": "receiverTin",
+                      "value": "",
+                      "description": "Optional: Document receiver identifier. Only can be used when ‘Direction’ filter is set to Received.",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Aug 2024 06:35:04 GMT"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "804"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Request-Context",
+                  "value": "appId=cid-v1:c15fc7aa-b0f4-4bdd-a621-0c28a8f967ff"
+                },
+                {
+                  "key": "correlationId",
+                  "value": "e7621541-c980-4b42-9052-ad39925f64ab"
+                },
+                {
+                  "key": "requestTimeUTC",
+                  "value": "08/07/2024 06:35:04"
+                },
+                {
+                  "key": "responseProcessingTimeInTicks",
+                  "value": "364"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=31536000"
+                },
+                {
+                  "key": "X-XSS-Protection",
+                  "value": "0"
+                },
+                {
+                  "key": "X-Frame-Options",
+                  "value": "deny"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "Content-Security-Policy",
+                  "value": "script-src 'self'"
+                },
+                {
+                  "key": "X-Rate-Limit-Remaining",
+                  "value": "1999"
+                },
+                {
+                  "key": "X-Rate-Limit-Limit",
+                  "value": "2000"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"result\": [\n        {\n            \"uuid\": \"42S512YACQBRSRHYKBXBTGQG22\",\n            \"submissionUUID\": null,\n            \"longId\": \"YQH73576FY9VR57B…\",\n            \"internalId\": \"PZ-234-A\",\n            \"typeName\": \"01\",\n            \"typeVersionName\": \"1.0\",\n            \"issuerTin\": \"C2584563202\",\n            \"issuerName\": \"AMS Setia Jaya Sdn. Bhd.\",\n            \"receiverId\": \"087377381\",\n            \"receiverIdType\": \"PASSPORT\",\n            \"receiverName\": \"AMS Setia Jaya Sdn. Bhd.\",\n            \"dateTimeIssued\": \"2015-02-13T13:15:00Z\",\n            \"dateTimeReceived\": \"2015-02-13T14:20:00Z\",\n            \"totalSales\": 10.1,\n            \"totalDiscount\": 50,\n            \"netAmount\": 100.7,\n            \"total\": 124.09,\n            \"totalOriginalSales\": 10.1,\n            \"totalOriginalDiscount\": 50,\n            \"netOriginalAmount\": 100.7,\n            \"totalOriginal\": 124.09,\n            \"status\": \"Valid\",\n            \"cancelDateTime\": \"2021-02-25T01:59:10.2095172Z\",\n            \"rejectRequestDateTime\": \"2021-02-25T01:59:10.2095172Z\",\n            \"documentStatusReason\": \"Wrong invoice details\",\n            \"createdByUserId\": \"general.ams@supplier.com\"\n        }\n    ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

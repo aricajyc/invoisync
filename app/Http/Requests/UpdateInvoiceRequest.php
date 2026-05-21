@@ -13,8 +13,8 @@ class UpdateInvoiceRequest extends FormRequest
     {
         $invoice = $this->route('invoice');
         
-        // Only allow editing draft or rejected invoices
-        return $invoice && in_array($invoice->status, ['draft', 'rejected']);
+        // Only allow editing draft or rejected/invalid invoices
+        return $invoice && in_array($invoice->status, ['draft', 'rejected', 'invalid']);
     }
 
     /**

@@ -35,6 +35,9 @@ export default function BusinessProfileForm({ auth, mustVerifyEmail, status, pro
     const [msicCodes, setMsicCodes] = useState([]);
     const [loadingCodes, setLoadingCodes] = useState(true);
 
+    const [validatingTin, setValidatingTin] = useState(false);
+    const [tinResult, setTinResult] = useState(null);
+
     useEffect(() => {
         const fetchCodes = async () => {
             try {
@@ -57,6 +60,32 @@ export default function BusinessProfileForm({ auth, mustVerifyEmail, status, pro
         };
         fetchCodes();
     }, []);
+
+    const handleValidateTin = async () => {
+        if (!data.tax_identification_number || !data.business_registration_number) {
+            setTinResult({ valid: false, message: 'Please enter both TIN and Registration Number first.' });
+            return;
+        }
+        if (!data.myinvois_client_id || !data.myinvois_client_secret) {
+            setTinResult({ valid: false, message: 'Please scroll down and enter your MyInvois Client ID and Secret first.' });
+            return;
+        }
+        setValidatingTin(true);
+        setTinResult(null);
+        try {
+            const res = await axios.post(route('business-profile.validate-tin'), {
+                tin: data.tax_identification_number,
+                registration_number: data.business_registration_number,
+                client_id: data.myinvois_client_id,
+                client_secret: data.myinvois_client_secret,
+            });
+            setTinResult(res.data);
+        } catch (error) {
+            setTinResult({ valid: false, message: 'An unexpected error occurred.' });
+        } finally {
+            setValidatingTin(false);
+        }
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -127,15 +156,30 @@ export default function BusinessProfileForm({ auth, mustVerifyEmail, status, pro
                                     </div>
                                     <div>
                                         <InputLabel htmlFor="tax_identification_number" value="Tax ID (TIN)" />
-                                        <TextInput
-                                            id="tax_identification_number"
-                                            className="mt-1 block w-full"
-                                            value={data.tax_identification_number}
-                                            onChange={(e) => setData('tax_identification_number', e.target.value)}
-                                            required
-                                            placeholder="C1234567890"
-                                        />
+                                        <div className="flex space-x-2 mt-1">
+                                            <TextInput
+                                                id="tax_identification_number"
+                                                className="block w-full"
+                                                value={data.tax_identification_number}
+                                                onChange={(e) => setData('tax_identification_number', e.target.value)}
+                                                required
+                                                placeholder="C1234567890"
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={handleValidateTin}
+                                                disabled={validatingTin}
+                                                className="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-500 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none disabled:opacity-25 transition ease-in-out duration-150"
+                                            >
+                                                {validatingTin ? 'Validating...' : 'Validate'}
+                                            </button>
+                                        </div>
                                         <InputError className="mt-2" message={errors.tax_identification_number} />
+                                        {tinResult && (
+                                            <div className={`mt-2 text-sm ${tinResult.valid ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                                {tinResult.message}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

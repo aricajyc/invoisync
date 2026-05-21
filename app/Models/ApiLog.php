@@ -12,12 +12,21 @@ class ApiLog extends Model
     protected $fillable = [
         'submission_id',
         'endpoint',
-        'method',
-        'status_code',
+        'http_method',
+        'http_status_code',
+        'request_headers',
         'request_body',
+        'response_headers',
         'response_body',
-        'ip_address',
-        'duration_ms',
+        'response_time_ms',
+        'error_message',
+    ];
+
+    protected $casts = [
+        'request_headers' => 'array',
+        'request_body' => 'array',
+        'response_headers' => 'array',
+        'response_body' => 'array',
     ];
 
     // ==================== RELATIONSHIPS ====================

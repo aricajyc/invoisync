@@ -170,7 +170,7 @@ class InvoiceController extends Controller
             'total_issued' => Invoice::where('user_id', $user->id)->count(),
             'total_draft' => Invoice::where('user_id', $user->id)->where('status', 'draft')->count(),
             'total_validated' => Invoice::where('user_id', $user->id)->where('status', 'validated')->count(),
-            'total_rejected' => Invoice::where('user_id', $user->id)->where('status', 'rejected')->count(),
+            'total_rejected' => Invoice::where('user_id', $user->id)->whereIn('status', ['rejected', 'invalid'])->count(),
         ];
 
         return response()->json($stats);
