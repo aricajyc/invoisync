@@ -28,3 +28,9 @@ Thumbs.db
 test_*.php
 submit_real.php
 scratch.php
+payload.json
+payload.txt
+sql_log.txt
+test_output.txt
+test_result.json
+full_test_log.txt
