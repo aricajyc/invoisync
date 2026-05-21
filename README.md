@@ -1,4 +1,4 @@
-# InvoiSync 🇲🇾
+# InvoiSync - B2B and B2C Invoice Management System
 
 InvoiSync is a modern, full-stack web application designed to help Malaysian businesses seamlessly comply with the **Lembaga Hasil Dalam Negeri (LHDN) E-Invoicing** requirements. Built with a robust Laravel backend and a highly interactive React frontend, InvoiSync simplifies the complex process of creating, validating, and submitting e-invoices directly to the MyInvois portal.
 
