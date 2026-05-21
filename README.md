@@ -107,7 +107,3 @@ To submit real invoices, you must configure your LHDN MyInvois API credentials:
 ## 🤝 Contributing
 
 Contributions are welcome! If you find a bug or have a feature request, please open an issue. If you'd like to contribute code, please submit a Pull Request.
-
-## 📄 License
-
-The InvoiSync project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
