@@ -67,13 +67,11 @@ class BusinessProfileController extends Controller
             
             $idType = str_starts_with($request->tin, 'IG') ? 'NRIC' : 'BRN';
             
-            $result = $myInvois->taxpayer()->validateTin(
-                payload: [
-                    'tin' => $request->tin, 
-                    'idType' => $idType, 
-                    'idValue' => $request->registration_number
-                ]
-            );
+            $result = $myInvois->taxpayer()->payload([
+                'tin' => $request->tin, 
+                'idType' => $idType, 
+                'idValue' => $request->registration_number
+            ])->validateTin();
 
             if ($result['success'] ?? false) {
                 return response()->json(['valid' => true, 'message' => 'TIN is valid and active!']);
