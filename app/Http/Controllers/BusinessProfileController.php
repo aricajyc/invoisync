@@ -58,6 +58,9 @@ class BusinessProfileController extends Controller
                 client_secret: $request->client_secret
             );
             
+            // Fix: Override the global instance so Laraditz sub-services use our custom credentials
+            app()->instance('myinvois', $myInvois);
+            
             $myInvois->auth()->token(
                 client_id: $request->client_id, 
                 client_secret: $request->client_secret, 
