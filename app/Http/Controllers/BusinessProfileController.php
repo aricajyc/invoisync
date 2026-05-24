@@ -53,7 +53,7 @@ class BusinessProfileController extends Controller
 
         try {
             $myInvois = new \Laraditz\MyInvois\MyInvois(
-                is_sandbox: env('MYINVOIS_SANDBOX', true), 
+                is_sandbox: config('myinvois.sandbox_mode', false), 
                 client_id: $request->client_id, 
                 client_secret: $request->client_secret
             );
