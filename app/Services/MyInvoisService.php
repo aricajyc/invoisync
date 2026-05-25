@@ -46,10 +46,13 @@ class MyInvoisService
         $this->clientSecret = $clientSecret;
         
         $this->myInvois = new \Laraditz\MyInvois\MyInvois(
-            is_sandbox: env('MYINVOIS_SANDBOX', false),
+            is_sandbox: config('myinvois.sandbox_mode', false),
             client_id: $this->clientId,
             client_secret: $this->clientSecret
         );
+        
+        // Fix: Override the global instance so Laraditz sub-services use our custom credentials
+        app()->instance('myinvois', $this->myInvois);
     }
     
     protected function myr(float $v): Money 
