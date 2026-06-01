@@ -370,11 +370,29 @@ class InvoiceController extends Controller
             $submission = $myInvoisService->submitInvoice($invoice);
 
             if ($submission->status === 'accepted') {
+                UserActivity::create([
+                    'user_id' => $request->user()->id,
+                    'action' => 'Submitted Invoice',
+                    'description' => "Successfully submitted invoice {$invoice->invoice_number} to LHDN. UID: {$submission->myinvois_uid}",
+                    'ip_address' => $request->ip(),
+                ]);
                 return back()->with('status', "Invoice successfully submitted to MyInvois. UID: {$submission->myinvois_uid}");
             } else {
+                UserActivity::create([
+                    'user_id' => $request->user()->id,
+                    'action' => 'Submitted Invoice',
+                    'description' => "Failed to submit invoice {$invoice->invoice_number} to LHDN: {$submission->rejection_reason}",
+                    'ip_address' => $request->ip(),
+                ]);
                 return back()->withErrors(['myinvois' => "Submission rejected: {$submission->rejection_reason}"]);
             }
         } catch (\Exception $e) {
+            UserActivity::create([
+                'user_id' => $request->user()->id,
+                'action' => 'Submitted Invoice',
+                'description' => "Failed to submit invoice {$invoice->invoice_number} to LHDN: " . substr($e->getMessage(), 0, 200),
+                'ip_address' => $request->ip(),
+            ]);
             return back()->withErrors(['myinvois' => "Failed to connect to MyInvois: " . $e->getMessage()]);
         }
     }
@@ -422,6 +440,13 @@ class InvoiceController extends Controller
                 \Illuminate\Support\Facades\Log::error('Bulk submission failed for Invoice ' . $invoice->id . ': ' . $e->getMessage());
             }
         }
+
+        UserActivity::create([
+            'user_id' => $request->user()->id,
+            'action' => 'Bulk Submit',
+            'description' => "Bulk submitted invoices to LHDN: {$successful} accepted, {$failed} rejected/failed.",
+            'ip_address' => $request->ip(),
+        ]);
 
         return back()->with('status', "Bulk submission completed: {$successful} accepted, {$failed} rejected/failed.");
     }
