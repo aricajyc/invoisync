@@ -71,15 +71,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(SubmissionAnalytic::class);
     }
 
-    public function notifications()
-    {
-        return $this->hasMany(SystemNotification::class);
-    }
-
-    public function mobileDevices()
-    {
-        return $this->hasMany(MobileDevice::class);
-    }
 
     public function invoiceTemplates()
     {
