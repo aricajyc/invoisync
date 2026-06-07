@@ -19,7 +19,7 @@ export default function AuthenticatedLayout({ header, children }) {
     // And import router.
 
     useEffect(() => {
-        if (!user.business_profile && !window.location.pathname.startsWith('/business-profile')) {
+        if (user.user_type !== 'Admin' && !user.business_profile && !window.location.pathname.startsWith('/business-profile')) {
             router.visit(route('business-profile.show'));
         }
     }, [user]);
@@ -37,18 +37,45 @@ export default function AuthenticatedLayout({ header, children }) {
                             </div>
 
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
-                                <NavLink
-                                    href={route('invoices.index')}
-                                    active={route().current('invoices.*')}
-                                >
-                                    Invoices
-                                </NavLink>
+                                {user.user_type !== 'Admin' && (
+                                    <>
+                                        <NavLink
+                                            href={route('dashboard')}
+                                            active={route().current('dashboard')}
+                                        >
+                                            Dashboard
+                                        </NavLink>
+                                        <NavLink
+                                            href={route('invoices.index')}
+                                            active={route().current('invoices.*')}
+                                        >
+                                            Invoices
+                                        </NavLink>
+                                    </>
+                                )}
+
+                                {user.user_type === 'Admin' && (
+                                    <>
+                                        <NavLink
+                                            href={route('admin.dashboard')}
+                                            active={route().current('admin.dashboard')}
+                                        >
+                                            Admin Dashboard
+                                        </NavLink>
+                                        <NavLink
+                                            href={route('admin.users')}
+                                            active={route().current('admin.users')}
+                                        >
+                                            All Users
+                                        </NavLink>
+                                        <NavLink
+                                            href={route('admin.invoices')}
+                                            active={route().current('admin.invoices')}
+                                        >
+                                            All Invoices
+                                        </NavLink>
+                                    </>
+                                )}
                                 <NavLink
                                     href={route('activity-logs.index')}
                                     active={route().current('activity-logs.*')}
@@ -153,18 +180,45 @@ export default function AuthenticatedLayout({ header, children }) {
                     }
                 >
                     <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('invoices.index')}
-                            active={route().current('invoices.*')}
-                        >
-                            Invoices
-                        </ResponsiveNavLink>
+                        {user.user_type !== 'Admin' && (
+                            <>
+                                <ResponsiveNavLink
+                                    href={route('dashboard')}
+                                    active={route().current('dashboard')}
+                                >
+                                    Dashboard
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('invoices.index')}
+                                    active={route().current('invoices.*')}
+                                >
+                                    Invoices
+                                </ResponsiveNavLink>
+                            </>
+                        )}
+
+                        {user.user_type === 'Admin' && (
+                            <>
+                                <ResponsiveNavLink
+                                    href={route('admin.dashboard')}
+                                    active={route().current('admin.dashboard')}
+                                >
+                                    Admin Dashboard
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('admin.users')}
+                                    active={route().current('admin.users')}
+                                >
+                                    All Users
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('admin.invoices')}
+                                    active={route().current('admin.invoices')}
+                                >
+                                    All Invoices
+                                </ResponsiveNavLink>
+                            </>
+                        )}
                         <ResponsiveNavLink
                             href={route('activity-logs.index')}
                             active={route().current('activity-logs.*')}

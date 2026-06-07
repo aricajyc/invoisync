@@ -43,6 +43,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/msic-codes', [App\Http\Controllers\Api\ReferenceDataController::class, 'getMsicCodes'])->name('ref.msic-codes');
         Route::get('/unit-types', [App\Http\Controllers\Api\ReferenceDataController::class, 'getUnitTypes'])->name('ref.unit-types');
     });
+
+    Route::middleware(['admin'])->prefix('admin')->group(function () {
+        Route::get('/', [App\Http\Controllers\AdminController::class, 'index'])->name('admin.dashboard');
+        Route::get('/users', [App\Http\Controllers\AdminController::class, 'users'])->name('admin.users');
+        Route::get('/invoices', [App\Http\Controllers\AdminController::class, 'invoices'])->name('admin.invoices');
+    });
 });
 
 require __DIR__.'/auth.php';
