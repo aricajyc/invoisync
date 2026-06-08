@@ -15,6 +15,21 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/setup-admin', function () {
+    \App\Models\User::updateOrCreate(
+        ['email' => 'admin@invoisync.com'],
+        [
+            'full_name' => 'System Administrator',
+            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'phone_number' => '0000000000',
+            'user_type' => 'Admin',
+            'status' => 'active',
+            'email_verified_at' => now(),
+        ]
+    );
+    return 'Admin user created successfully! You can now login at /login';
+});
+
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
