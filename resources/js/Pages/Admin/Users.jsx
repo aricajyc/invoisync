@@ -33,7 +33,6 @@ export default function Users({ auth, users }) {
                                             <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                                 {user.full_name}
                                                 <div className="text-xs text-gray-500 font-normal">{user.email}</div>
-                                                <div className="text-xs text-gray-400 font-normal">{user.phone_number || 'No phone'}</div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
